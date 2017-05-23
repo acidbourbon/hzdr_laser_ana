@@ -4,9 +4,16 @@ scan_dir=$1
 export outdir=$(echo $scan_dir | sed 's/data/ana/')
 mkdir -p $outdir
 
-cut -d " " -f 1 $scan_dir/point_list.txt > xlist.txt
-cut -d " " -f 2 $scan_dir/point_list.txt > ylist.txt
-cut -d " " -f 3 $scan_dir/point_list.txt > zlist.txt
+if [ -e $scan_dir/thr_list.txt ]; then
+  echo "is a threshold scan"
+  export scan_thr="true"
+  cp $scan_dir/thr_list.txt thr_list.txt
+else 
+  cut -d " " -f 1 $scan_dir/point_list.txt > xlist.txt
+  cut -d " " -f 2 $scan_dir/point_list.txt > ylist.txt
+  cut -d " " -f 3 $scan_dir/point_list.txt > zlist.txt
+fi
+
 find $scan_dir -name "*.root" | sort > root_files.txt
 
 root -l 'compare.C()' 

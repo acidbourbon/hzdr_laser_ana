@@ -136,6 +136,7 @@ void compare(void) {
     
   TString outdir=from_env("outdir","./");
   TString scan_z=from_env("scan_z","false");
+  TString scan_thr=from_env("scan_thr","false");
   
   TGraph2DErrors *tot0 = new TGraph2DErrors();
   tot0->SetTitle("Time Over Threshold Ch 0");
@@ -169,6 +170,13 @@ void compare(void) {
   tg_ch5_t1_means->GetXaxis()->SetTitle("y-pos (um)");
   tg_ch5_t1_means->GetYaxis()->SetTitle("t1 (ns)");
   
+
+  TGraphErrors *tg_ch5_tot_means = new TGraphErrors();
+  tg_ch5_tot_means->SetTitle("tot ch5 means");
+  tg_ch5_tot_means->SetName("tg_ch5_tot_means");
+  tg_ch5_tot_means->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ch5_tot_means->GetYaxis()->SetTitle("tot (ns)");
+  
   TGraph *tg_ch5_t1_std = new TGraph();
   tg_ch5_t1_std->SetTitle("t1 ch5 StdDevs");
   tg_ch5_t1_std->SetName("tg_ch5_t1_std");
@@ -179,6 +187,13 @@ void compare(void) {
     tg_ch5_t1->GetXaxis()->SetTitle("z-pos (um)");
     tg_ch5_t1_std->GetXaxis()->SetTitle("z-pos (um)");
     tg_ch5_t1_means->GetXaxis()->SetTitle("z-pos (um)");
+    tg_ch5_tot_means->GetXaxis()->SetTitle("z-pos (um)");
+  }
+  if( scan_thr == "true") {
+    tg_ch5_t1->GetXaxis()->SetTitle("threshold (LSB)");
+    tg_ch5_t1_std->GetXaxis()->SetTitle("threshold (LSB)");
+    tg_ch5_t1_means->GetXaxis()->SetTitle("threshold (LSB)");
+    tg_ch5_tot_means->GetXaxis()->SetTitle("threshold (LSB)");
   }
   
 //   _                                          
@@ -199,9 +214,17 @@ void compare(void) {
 //                                              
   
   std::vector<TString> list = file_to_str_array("root_files.txt");
-  std::vector<TString> xlist = file_to_str_array("xlist.txt");
-  std::vector<TString> ylist = file_to_str_array("ylist.txt");
-  std::vector<TString> zlist = file_to_str_array("zlist.txt");
+  std::vector<TString> xlist;
+  std::vector<TString> ylist;
+  std::vector<TString> zlist;
+  std::vector<TString> thr_list; 
+  if ( scan_thr == "true" ){
+    thr_list = file_to_str_array("thr_list.txt");
+  } else {
+    xlist = file_to_str_array("xlist.txt");
+    ylist = file_to_str_array("ylist.txt");
+    zlist = file_to_str_array("zlist.txt");
+  }
   
   TLegend* leg = new TLegend(0.1,0.7,0.48,0.9);
 //   leg->SetHeader("The Legend Title"); // option "C" allows to center the header
@@ -230,33 +253,47 @@ void compare(void) {
     TFile *f = new TFile(fname);
     
     TH1F* CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_1483/Sec_1483_Ch05_t1"));  
+    TH1F* CentA_tot = ((TH1F*) f->Get("Histograms/Sec_1483/Sec_1483_Ch05_tot"));  
 //     CentA_t1->Rebin(4);
     
     
     Double_t t1 = get_toa_offset(CentA_t1);
     Double_t t1_mean = CentA_t1->GetMean();
     Double_t t1_std  = CentA_t1->GetStdDev();
+    Double_t tot_mean = CentA_tot->GetMean();
+    Double_t tot_std  = CentA_tot->GetStdDev();
     
+    
+  if ( scan_thr == "true" ){
+    cout << "thresh: " << thr_list[i] << endl;
+  } else {
     cout << "x pos: " << xlist[i] << endl;
     cout << "y pos: " << ylist[i] << endl;
     cout << "z pos: " << zlist[i] << endl;
+  }
 //     if( t1 > 100 || t1 < -100) {
 //         t1 = -100;
 //     }
     
-    Double_t graph_x = ylist[i].Atoi();
-    if( scan_z == "true") {
+    Double_t graph_x;
+    if( scan_thr == "true") {
+      graph_x = thr_list[i].Atoi();
+    } else if( scan_z == "true") {
       graph_x = zlist[i].Atoi();
+    } else {
+      graph_x = ylist[i].Atoi();
     }
     
-    if( zlist[i].Atoi() !=0) {
+//     if( zlist[i].Atoi() !=0) {
         static Int_t point_no = 0;
         tg_ch5_t1->SetPoint(point_no,graph_x,t1);
         tg_ch5_t1_means->SetPoint(point_no,graph_x,t1_mean);
         tg_ch5_t1_means->SetPointError (point_no, 0, t1_std);
+        tg_ch5_tot_means->SetPoint(point_no,graph_x,tot_mean);
+        tg_ch5_tot_means->SetPointError (point_no, 0, tot_std);
         tg_ch5_t1_std->SetPoint(point_no, graph_x, t1_std);
         point_no++;
-    }
+//     }
     
     TString a;
     a.Form("%04.1f_t1_hist",graph_x);
@@ -264,7 +301,7 @@ void compare(void) {
     cout << "t1   : " << t1 << endl;
     
     
-    leg->AddEntry(CentA_t1,ylist[i],"l");
+    leg->AddEntry(CentA_t1,"entry","l");
     CentA_t1->SetLineColor(color_contrast_array[i]);
     CentA_t1->GetYaxis()->SetRangeUser(0,1000);
     
@@ -322,6 +359,12 @@ void compare(void) {
   tg_ch5_t1_means->SetMarkerColor(4);
   tg_ch5_t1_means->SetMarkerStyle(21);
   draw_and_save(tg_ch5_t1_means,"tg_ch5_t1_means",outdir,"AP");
+  
+  tg_ch5_tot_means->SetLineColor(2);
+  tg_ch5_tot_means->SetLineWidth(4);
+  tg_ch5_tot_means->SetMarkerColor(4);
+  tg_ch5_tot_means->SetMarkerStyle(21);
+  draw_and_save(tg_ch5_tot_means,"tg_ch5_tot_means",outdir,"AP");
   
   tg_ch5_t1_std->SetLineColor(2);
   tg_ch5_t1_std->SetLineWidth(4);
