@@ -36,13 +36,13 @@ TString from_env(TString env_var,TString default_val){
 void draw_and_save(TObject *hist,TString name,TString outdir,TString draw_options) {
   
 //   if(DRAW_PNG) {
-    TCanvas *c = new TCanvas("c_"+name,"c_"+name,200,10,600,400);
+    TCanvas *c = new TCanvas("c_"+name,"c_"+name,200,10,1024,786);
     c->cd();
     hist->Draw(draw_options);
     c->Print(outdir+name+".png");
 //   }
 //   c->Print(outdir+name+".pdf");
-//     c->Print(outdir+name+".svg");
+    c->Print(outdir+name+".svg");
 }
 
 
@@ -196,6 +196,12 @@ void compare(void) {
     tg_ch5_tot_means->GetXaxis()->SetTitle("threshold (LSB)");
   }
   
+  
+  
+  
+  TFile *f_out = new TFile(outdir+"/compare.root","RECREATE");
+  
+  
 //   _                                          
 //  | |                                         
 //  | | ___   ___  _ __     _____   _____ _ __  
@@ -218,6 +224,9 @@ void compare(void) {
   std::vector<TString> ylist;
   std::vector<TString> zlist;
   std::vector<TString> thr_list; 
+  
+//   std::vector<TH1F*> hist_list;
+  
   if ( scan_thr == "true" ){
     thr_list = file_to_str_array("thr_list.txt");
   } else {
@@ -252,6 +261,8 @@ void compare(void) {
     
     TFile *f = new TFile(fname);
     
+    f->cd();
+    
     TH1F* CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_1483/Sec_1483_Ch05_t1"));  
     TH1F* CentA_tot = ((TH1F*) f->Get("Histograms/Sec_1483/Sec_1483_Ch05_tot"));  
 //     CentA_t1->Rebin(4);
@@ -284,7 +295,7 @@ void compare(void) {
       graph_x = ylist[i].Atoi();
     }
     
-//     if( zlist[i].Atoi() !=0) {
+    if( zlist[i].Atoi() == 4500) { // select only points in the anode plane
         static Int_t point_no = 0;
         tg_ch5_t1->SetPoint(point_no,graph_x,t1);
         tg_ch5_t1_means->SetPoint(point_no,graph_x,t1_mean);
@@ -292,12 +303,23 @@ void compare(void) {
         tg_ch5_tot_means->SetPoint(point_no,graph_x,tot_mean);
         tg_ch5_tot_means->SetPointError (point_no, 0, tot_std);
         tg_ch5_t1_std->SetPoint(point_no, graph_x, t1_std);
+        
+        
+        TH1F* hist_new = (TH1F*) CentA_t1->Clone();
+        TString new_hist_name;
+        new_hist_name.Form("%04.1f_t1_hist",graph_x);
+        hist_new->SetName(new_hist_name);
+        f_out->cd();
+        hist_new->Write();
+        f->cd();
+        
+        
         point_no++;
-//     }
+    }
     
     TString a;
     a.Form("%04.1f_t1_hist",graph_x);
-    draw_and_save(CentA_t1,a,outdir,"");
+    //draw_and_save(CentA_t1,a,outdir,"");
     cout << "t1   : " << t1 << endl;
     
     
@@ -422,10 +444,14 @@ void compare(void) {
 //   toa_rms1->Draw("tri1");
 //   
 //   
-  TFile *f = new TFile(outdir+"/compare.root","RECREATE");
+  
+  f_out->cd();
   tg_ch5_t1->Write();
   tg_ch5_t1_means->Write();
   tg_ch5_t1_std->Write();
-  f->Write();
+  tg_ch5_tot_means->Write();
+  
+  
+  f_out->Write();
   
 }
