@@ -1,6 +1,7 @@
 // this is the compare.C for the 
 
 
+
 Bool_t file_exists(TString fname){
   
   fstream src_file(fname.Data());
@@ -103,7 +104,6 @@ Float_t get_toa_offset(TH1F* toa0) {
 
 
 
-
 void compare(void) {
     Int_t color_contrast_array[200]={kBlack,kRed,kBlue,kGreen+1,kOrange,kMagenta,kYellow+1,kViolet,kOrange+7,kRed+1,kRed+2,kRed-6,kOrange-3,kMagenta+1,kMagenta+2,kMagenta-9,kBlue+2,kBlue-7,kGreen+2,kGreen-6,kYellow+2,kGray,kGray+1, kGray+2};
   
@@ -134,66 +134,77 @@ void compare(void) {
 //   Float_t thresh_start = 0;
 //   Float_t thresh_stop  = 127;
     
+  TString TDC=from_env("fpga","1482");
+  TString chan=from_env("chan","05");
+    
   TString outdir=from_env("outdir","./");
   TString scan_z=from_env("scan_z","false");
   TString scan_thr=from_env("scan_thr","false");
   
-  TGraph2DErrors *tot0 = new TGraph2DErrors();
-  tot0->SetTitle("Time Over Threshold Ch 0");
-  tot0->SetName("tot0");
-  tot0->GetXaxis()->SetTitle("injected charge (C)");
-  tot0->GetYaxis()->SetTitle("threshold");
-  tot0->GetZaxis()->SetTitle("ToT (ns)");
+//   TGraph2DErrors *tot0 = new TGraph2DErrors();
+//   tot0->SetTitle("Time Over Threshold Ch 0");
+//   tot0->SetName("tot0");
+//   tot0->GetXaxis()->SetTitle("injected charge (C)");
+//   tot0->GetYaxis()->SetTitle("threshold");
+//   tot0->GetZaxis()->SetTitle("ToT (ns)");
+//   
+//   TGraph2D *tot_rms0 = new TGraph2D();
+//   tot_rms0->SetTitle("Time Over Threshold RMS Ch 0");
+//   tot_rms0->SetName("tot_rms0");
+//   tot_rms0->GetXaxis()->SetTitle("injected charge (C)");
+//   tot_rms0->GetYaxis()->SetTitle("threshold");
+//   tot_rms0->GetZaxis()->SetTitle("ToT (ns)");
+//   
+//   TGraph2D *toa_rms1 = new TGraph2D();
+//   toa_rms1->SetTitle("Time of arrival RMS Ch 1 vs Ch 0");
+//   toa_rms1->SetName("toa_rms1");
   
-  TGraph2D *tot_rms0 = new TGraph2D();
-  tot_rms0->SetTitle("Time Over Threshold RMS Ch 0");
-  tot_rms0->SetName("tot_rms0");
-  tot_rms0->GetXaxis()->SetTitle("injected charge (C)");
-  tot_rms0->GetYaxis()->SetTitle("threshold");
-  tot_rms0->GetZaxis()->SetTitle("ToT (ns)");
   
-  TGraph2D *toa_rms1 = new TGraph2D();
-  toa_rms1->SetTitle("Time of arrival RMS Ch 1 vs Ch 0");
-  toa_rms1->SetName("toa_rms1");
+  TGraph *tg_ChX_t1 = new TGraph();
+  tg_ChX_t1->SetTitle("t1 Ch"+chan);
+  tg_ChX_t1->SetName("tg_Ch"+chan+"_t1");
+  tg_ChX_t1->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_t1->GetYaxis()->SetTitle("t1 (ns)");
+  //tg_ChX_t1->GetZaxis()->SetTitle("ToT (ns)");
   
-  
-  TGraph *tg_ch5_t1 = new TGraph();
-  tg_ch5_t1->SetTitle("t1 ch5");
-  tg_ch5_t1->SetName("tg_ch5_t1");
-  tg_ch5_t1->GetXaxis()->SetTitle("y-pos (um)");
-  tg_ch5_t1->GetYaxis()->SetTitle("t1 (ns)");
-  //tg_ch5_t1->GetZaxis()->SetTitle("ToT (ns)");
-  
-  TGraphErrors *tg_ch5_t1_means = new TGraphErrors();
-  tg_ch5_t1_means->SetTitle("t1 ch5 means");
-  tg_ch5_t1_means->SetName("tg_ch5_t1_means");
-  tg_ch5_t1_means->GetXaxis()->SetTitle("y-pos (um)");
-  tg_ch5_t1_means->GetYaxis()->SetTitle("t1 (ns)");
+  TGraphErrors *tg_ChX_t1_means = new TGraphErrors();
+  tg_ChX_t1_means->SetTitle("t1 Ch"+chan+" means");
+  tg_ChX_t1_means->SetName("tg_Ch"+chan+"_t1_means");
+  tg_ChX_t1_means->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_t1_means->GetYaxis()->SetTitle("t1 (ns)");
   
 
-  TGraphErrors *tg_ch5_tot_means = new TGraphErrors();
-  tg_ch5_tot_means->SetTitle("tot ch5 means");
-  tg_ch5_tot_means->SetName("tg_ch5_tot_means");
-  tg_ch5_tot_means->GetXaxis()->SetTitle("y-pos (um)");
-  tg_ch5_tot_means->GetYaxis()->SetTitle("tot (ns)");
+  TGraphErrors *tg_ChX_tot_means = new TGraphErrors();
+  tg_ChX_tot_means->SetTitle("tot Ch"+chan+" means");
+  tg_ChX_tot_means->SetName("tg_Ch"+chan+"_tot_means");
+  tg_ChX_tot_means->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_tot_means->GetYaxis()->SetTitle("tot (ns)");
   
-  TGraph *tg_ch5_t1_std = new TGraph();
-  tg_ch5_t1_std->SetTitle("t1 ch5 StdDevs");
-  tg_ch5_t1_std->SetName("tg_ch5_t1_std");
-  tg_ch5_t1_std->GetXaxis()->SetTitle("y-pos (um)");
-  tg_ch5_t1_std->GetYaxis()->SetTitle("t1 StdDev (ns)");
+  TGraph *tg_ChX_t1_std = new TGraph();
+  tg_ChX_t1_std->SetTitle("t1 Ch"+chan+" StdDevs");
+  tg_ChX_t1_std->SetName("tg_ChX_t1_std");
+  tg_ChX_t1_std->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_t1_std->GetYaxis()->SetTitle("t1 StdDev (ns)");
+  
+  TGraph *tg_ChX_counts = new TGraph();
+  tg_ChX_counts->SetTitle("Ch"+chan+" Counts");
+  tg_ChX_counts->SetName("tg_ChX_counts");
+  tg_ChX_counts->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_counts->GetYaxis()->SetTitle("counts");
   
   if( scan_z == "true") {
-    tg_ch5_t1->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ch5_t1_std->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ch5_t1_means->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ch5_tot_means->GetXaxis()->SetTitle("z-pos (um)");
+    tg_ChX_t1->GetXaxis()->SetTitle("z-pos (um)");
+    tg_ChX_t1_std->GetXaxis()->SetTitle("z-pos (um)");
+    tg_ChX_t1_means->GetXaxis()->SetTitle("z-pos (um)");
+    tg_ChX_tot_means->GetXaxis()->SetTitle("z-pos (um)");
+    tg_ChX_counts->GetXaxis()->SetTitle("z-pos (um)");
   }
   if( scan_thr == "true") {
-    tg_ch5_t1->GetXaxis()->SetTitle("threshold (LSB)");
-    tg_ch5_t1_std->GetXaxis()->SetTitle("threshold (LSB)");
-    tg_ch5_t1_means->GetXaxis()->SetTitle("threshold (LSB)");
-    tg_ch5_tot_means->GetXaxis()->SetTitle("threshold (LSB)");
+    tg_ChX_t1->GetXaxis()->SetTitle("threshold (LSB)");
+    tg_ChX_t1_std->GetXaxis()->SetTitle("threshold (LSB)");
+    tg_ChX_t1_means->GetXaxis()->SetTitle("threshold (LSB)");
+    tg_ChX_tot_means->GetXaxis()->SetTitle("threshold (LSB)");
+    tg_ChX_counts->GetXaxis()->SetTitle("threshold (LSB)");
   }
   
   
@@ -263,13 +274,14 @@ void compare(void) {
     
     f->cd();
     
-    TH1F* CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_1483/Sec_1483_Ch05_t1"));  
-    TH1F* CentA_tot = ((TH1F*) f->Get("Histograms/Sec_1483/Sec_1483_Ch05_tot"));  
+    TH1F* CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_t1"));  
+    TH1F* CentA_tot = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_tot"));  
 //     CentA_t1->Rebin(4);
     
     
     Double_t t1 = get_toa_offset(CentA_t1);
     Double_t t1_mean = CentA_t1->GetMean();
+    Double_t counts = CentA_t1->GetEntries();
     Double_t t1_std  = CentA_t1->GetStdDev();
     Double_t tot_mean = CentA_tot->GetMean();
     Double_t tot_std  = CentA_tot->GetStdDev();
@@ -295,14 +307,16 @@ void compare(void) {
       graph_x = ylist[i].Atoi();
     }
     
-    if( zlist[i].Atoi() == 4500) { // select only points in the anode plane
+    if( zlist[i].Atoi() == 4500 || true) { // select only points in the anode plane
         static Int_t point_no = 0;
-        tg_ch5_t1->SetPoint(point_no,graph_x,t1);
-        tg_ch5_t1_means->SetPoint(point_no,graph_x,t1_mean);
-        tg_ch5_t1_means->SetPointError (point_no, 0, t1_std);
-        tg_ch5_tot_means->SetPoint(point_no,graph_x,tot_mean);
-        tg_ch5_tot_means->SetPointError (point_no, 0, tot_std);
-        tg_ch5_t1_std->SetPoint(point_no, graph_x, t1_std);
+        tg_ChX_t1->SetPoint(point_no,graph_x,t1);
+        tg_ChX_t1_means->SetPoint(point_no,graph_x,t1_mean);
+        tg_ChX_t1_means->SetPointError (point_no, 0, t1_std);
+        tg_ChX_tot_means->SetPoint(point_no,graph_x,tot_mean);
+        tg_ChX_tot_means->SetPointError (point_no, 0, tot_std);
+        tg_ChX_t1_std->SetPoint(point_no, graph_x, t1_std);
+        
+        tg_ChX_counts->SetPoint(point_no,graph_x,counts);
         
         
         TH1F* hist_new = (TH1F*) CentA_t1->Clone();
@@ -365,35 +379,40 @@ void compare(void) {
 
   }
   
-//  tg_ch5_t1->SetMarkerSize(13);
-//  tg_ch5_t1->SetMarkerColor(1);
-//  tg_ch5_t1->SetMarkerStyle(21+i);
+//  tg_ChX_t1->SetMarkerSize(13);
+//  tg_ChX_t1->SetMarkerColor(1);
+//  tg_ChX_t1->SetMarkerStyle(21+i);
   
-  tg_ch5_t1->SetLineColor(2);
-  tg_ch5_t1->SetLineWidth(4);
-  tg_ch5_t1->SetMarkerColor(4);
-  tg_ch5_t1->SetMarkerStyle(21);
-  draw_and_save(tg_ch5_t1,"tg_ch5_t1",outdir,"AP");
-//   tg_ch5_t1->Draw("AP");
+  tg_ChX_t1->SetLineColor(2);
+  tg_ChX_t1->SetLineWidth(4);
+  tg_ChX_t1->SetMarkerColor(4);
+  tg_ChX_t1->SetMarkerStyle(21);
+  draw_and_save(tg_ChX_t1,"tg_ChX_t1",outdir,"AP");
+//   tg_ChX_t1->Draw("AP");
   
-  tg_ch5_t1_means->SetLineColor(2);
-  tg_ch5_t1_means->SetLineWidth(4);
-  tg_ch5_t1_means->SetMarkerColor(4);
-  tg_ch5_t1_means->SetMarkerStyle(21);
-  draw_and_save(tg_ch5_t1_means,"tg_ch5_t1_means",outdir,"AP");
+  tg_ChX_t1_means->SetLineColor(2);
+  tg_ChX_t1_means->SetLineWidth(4);
+  tg_ChX_t1_means->SetMarkerColor(4);
+  tg_ChX_t1_means->SetMarkerStyle(21);
+  draw_and_save(tg_ChX_t1_means,"tg_Ch"+chan+"_t1_means",outdir,"AP");
   
-  tg_ch5_tot_means->SetLineColor(2);
-  tg_ch5_tot_means->SetLineWidth(4);
-  tg_ch5_tot_means->SetMarkerColor(4);
-  tg_ch5_tot_means->SetMarkerStyle(21);
-  draw_and_save(tg_ch5_tot_means,"tg_ch5_tot_means",outdir,"AP");
+  tg_ChX_tot_means->SetLineColor(2);
+  tg_ChX_tot_means->SetLineWidth(4);
+  tg_ChX_tot_means->SetMarkerColor(4);
+  tg_ChX_tot_means->SetMarkerStyle(21);
+  draw_and_save(tg_ChX_tot_means,"tg_Ch"+chan+"_tot_means",outdir,"AP");
   
-  tg_ch5_t1_std->SetLineColor(2);
-  tg_ch5_t1_std->SetLineWidth(4);
-  tg_ch5_t1_std->SetMarkerColor(4);
-  tg_ch5_t1_std->SetMarkerStyle(21);
-  draw_and_save(tg_ch5_t1_std,"tg_ch5_t1_std",outdir,"AP");
+  tg_ChX_t1_std->SetLineColor(2);
+  tg_ChX_t1_std->SetLineWidth(4);
+  tg_ChX_t1_std->SetMarkerColor(4);
+  tg_ChX_t1_std->SetMarkerStyle(21);
+  draw_and_save(tg_ChX_t1_std,"tg_Ch"+chan+"_t1_std",outdir,"AP");
   
+  tg_ChX_counts->SetLineColor(2);
+  tg_ChX_counts->SetLineWidth(4);
+  tg_ChX_counts->SetMarkerColor(4);
+  tg_ChX_counts->SetMarkerStyle(21);
+  draw_and_save(tg_ChX_counts,"tg_Ch"+chan+"_counts",outdir,"AP");
 
 //                                      _ _           _             
 //                          ___        | (_)         | |            
@@ -446,10 +465,10 @@ void compare(void) {
 //   
   
   f_out->cd();
-  tg_ch5_t1->Write();
-  tg_ch5_t1_means->Write();
-  tg_ch5_t1_std->Write();
-  tg_ch5_tot_means->Write();
+  tg_ChX_t1->Write();
+  tg_ChX_t1_means->Write();
+  tg_ChX_t1_std->Write();
+  tg_ChX_tot_means->Write();
   
   
   f_out->Write();

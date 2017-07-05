@@ -1,0 +1,1 @@
+fpga=1483 chan=03 scan_z=true ./compare.sh ../data/z_scan_ASD8_02/
