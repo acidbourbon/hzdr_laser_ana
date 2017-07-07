@@ -1,7 +1,6 @@
 // this is the compare.C for the 
 
 
-
 Bool_t file_exists(TString fname){
   
   fstream src_file(fname.Data());
@@ -47,18 +46,6 @@ void draw_and_save(TObject *hist,TString name,TString outdir,TString draw_option
 }
 
 
-void get_gauss_params(TH1F* histogram, Float_t* target_mu, Float_t* target_sigma) {
-  histogram->Fit("gaus");
-  TF1 *fit = histogram->GetFunction("gaus");
-  Float_t chi2 = fit->GetChisquare();
-  Float_t p1 = fit->GetParameter(1);
-  Float_t e1 = fit->GetParError(1);
-  Float_t p2 = fit->GetParameter(2);
-  Float_t e2 = fit->GetParError(2);
-//   cout << "Gauss fit sigma: " << p2 << " +- " << e2 << "ns" << endl;
-  *target_mu = p1;
-  *target_sigma = p2;
-}
 
 
 Float_t get_toa_offset(TH1F* toa0) {
@@ -116,7 +103,7 @@ Float_t get_toa_offset(TH1F* toa0) {
 
 
 
-void compare(void) {
+void compare_vol(void) {
     Int_t color_contrast_array[200]={kBlack,kRed,kBlue,kGreen+1,kOrange,kMagenta,kYellow+1,kViolet,kOrange+7,kRed+1,kRed+2,kRed-6,kOrange-3,kMagenta+1,kMagenta+2,kMagenta-9,kBlue+2,kBlue-7,kGreen+2,kGreen-6,kYellow+2,kGray,kGray+1, kGray+2};
   
 
@@ -150,86 +137,79 @@ void compare(void) {
   TString chan=from_env("chan","05");
     
   TString outdir=from_env("outdir","./");
-  TString scan_x=from_env("scan_x","false");
   TString scan_z=from_env("scan_z","false");
   TString scan_thr=from_env("scan_thr","false");
   
 
   
-  TGraph *tg_ChX_t1 = new TGraph();
-  tg_ChX_t1->SetTitle("t1 Ch"+chan);
-  tg_ChX_t1->SetName("tg_Ch"+chan+"_t1");
+  
+  TGraph2D *tg_ChX_t1 = new TGraph2D();
+  tg_ChX_t1->SetTitle("t1 ChX");
+  tg_ChX_t1->SetName("tg_ChX_t1");
   tg_ChX_t1->GetXaxis()->SetTitle("y-pos (um)");
-  tg_ChX_t1->GetYaxis()->SetTitle("t1 (ns)");
-  //tg_ChX_t1->GetZaxis()->SetTitle("ToT (ns)");
+  tg_ChX_t1->GetXaxis()->SetTitleOffset(2.4);
+  tg_ChX_t1->GetYaxis()->SetTitle("z-pos (um)");
+  tg_ChX_t1->GetYaxis()->SetTitleOffset(2.4);
+  tg_ChX_t1->GetZaxis()->SetTitle("t1 (ns)");
+  tg_ChX_t1->GetZaxis()->SetTitleOffset(1.4);
   
-  TGraphErrors *tg_ChX_t1_means = new TGraphErrors();
-  tg_ChX_t1_means->SetTitle("t1 Ch"+chan+" means");
-  tg_ChX_t1_means->SetName("tg_Ch"+chan+"_t1_means");
+  
+  TGraph2DErrors *tg_ChX_t1_means = new TGraph2DErrors();
+  tg_ChX_t1_means->SetTitle("t1 ChX means");
+  tg_ChX_t1_means->SetName("tg_ChX_t1_means");
   tg_ChX_t1_means->GetXaxis()->SetTitle("y-pos (um)");
-  tg_ChX_t1_means->GetYaxis()->SetTitle("t1 (ns)");
+  tg_ChX_t1_means->GetXaxis()->SetTitleOffset(2.4);
+  tg_ChX_t1_means->GetYaxis()->SetTitle("z-pos (um)");
+  tg_ChX_t1_means->GetYaxis()->SetTitleOffset(2.4);
+  tg_ChX_t1_means->GetZaxis()->SetTitle("t1 (ns)");
+  tg_ChX_t1_means->GetZaxis()->SetTitleOffset(1.4);
   
-  TGraphErrors *tg_ChX_t1_gauss = new TGraphErrors();
-  tg_ChX_t1_gauss->SetTitle("t1 Ch"+chan+" gauss");
-  tg_ChX_t1_gauss->SetName("tg_Ch"+chan+"_t1_gauss");
-  tg_ChX_t1_gauss->GetXaxis()->SetTitle("y-pos (um)");
-  tg_ChX_t1_gauss->GetYaxis()->SetTitle("t1 (ns)");
-  
-
-  TGraphErrors *tg_ChX_tot_means = new TGraphErrors();
-  tg_ChX_tot_means->SetTitle("tot Ch"+chan+" means");
-  tg_ChX_tot_means->SetName("tg_Ch"+chan+"_tot_means");
+  TGraph2DErrors *tg_ChX_tot_means = new TGraph2DErrors();
+  tg_ChX_tot_means->SetTitle("tot ChX means");
+  tg_ChX_tot_means->SetName("tg_ChX_tot_means");
   tg_ChX_tot_means->GetXaxis()->SetTitle("y-pos (um)");
-  tg_ChX_tot_means->GetYaxis()->SetTitle("tot (ns)");
+  tg_ChX_tot_means->GetXaxis()->SetTitleOffset(2.4);
+  tg_ChX_tot_means->GetYaxis()->SetTitle("z-pos (um)");
+  tg_ChX_tot_means->GetYaxis()->SetTitleOffset(2.4);
+  tg_ChX_tot_means->GetZaxis()->SetTitle("tot (ns)");
+  tg_ChX_tot_means->GetZaxis()->SetTitleOffset(1.4);
+
+//   TGraphErrors *tg_ChX_tot_means = new TGraphErrors();
+//   tg_ChX_tot_means->SetTitle("tot ChX means");
+//   tg_ChX_tot_means->SetName("tg_ChX_tot_means");
+//   tg_ChX_tot_means->GetXaxis()->SetTitle("y-pos (um)");
+//   tg_ChX_tot_means->GetYaxis()->SetTitle("tot (ns)");
   
-  TGraph *tg_ChX_t1_std = new TGraph();
-  tg_ChX_t1_std->SetTitle("t1 Ch"+chan+" StdDevs");
+//   TGraph *tg_ChX_t1_std = new TGraph();
+//   tg_ChX_t1_std->SetTitle("t1 ChX StdDevs");
+//   tg_ChX_t1_std->SetName("tg_ChX_t1_std");
+//   tg_ChX_t1_std->GetXaxis()->SetTitle("y-pos (um)");
+//   tg_ChX_t1_std->GetYaxis()->SetTitle("t1 StdDev (ns)");
+  
+  TGraph2D *tg_ChX_t1_std = new TGraph2D();
+  tg_ChX_t1_std->SetTitle("t1 ChX StdDevs");
   tg_ChX_t1_std->SetName("tg_ChX_t1_std");
   tg_ChX_t1_std->GetXaxis()->SetTitle("y-pos (um)");
-  tg_ChX_t1_std->GetYaxis()->SetTitle("t1 StdDev (ns)");
+  tg_ChX_t1_std->GetXaxis()->SetTitleOffset(2.4);
+  tg_ChX_t1_std->GetYaxis()->SetTitle("z-pos (um)");
+  tg_ChX_t1_std->GetYaxis()->SetTitleOffset(2.4);
+  tg_ChX_t1_std->GetZaxis()->SetTitle("t1 StdDev (ns)");
+  tg_ChX_t1_std->GetZaxis()->SetTitleOffset(1.4);
   
-  TGraph *tg_ChX_counts = new TGraph();
+  
+  TGraph2D *tg_ChX_counts = new TGraph2D();
   tg_ChX_counts->SetTitle("Ch"+chan+" Counts");
   tg_ChX_counts->SetName("tg_ChX_counts");
   tg_ChX_counts->GetXaxis()->SetTitle("y-pos (um)");
-  tg_ChX_counts->GetYaxis()->SetTitle("counts");
+  tg_ChX_counts->GetYaxis()->SetTitle("z-pos (um)");
+  tg_ChX_counts->GetZaxis()->SetTitle("counts");
   
-  TGraph *tg_intensity = new TGraph();
+  TGraph2D *tg_intensity = new TGraph2D();
   tg_intensity->SetTitle("Laser Intensity");
   tg_intensity->SetName("tg_intensity");
   tg_intensity->GetXaxis()->SetTitle("y-pos (um)");
-  tg_intensity->GetYaxis()->SetTitle("intensity (nJ)");
-  
-  if( scan_x == "true") {
-    tg_ChX_t1->GetXaxis()->SetTitle("x-pos (um)");
-    tg_ChX_t1_std->GetXaxis()->SetTitle("x-pos (um)");
-    tg_ChX_t1_means->GetXaxis()->SetTitle("x-pos (um)");
-    tg_ChX_tot_means->GetXaxis()->SetTitle("x-pos (um)");
-    tg_ChX_counts->GetXaxis()->SetTitle("x-pos (um)");
-    tg_ChX_t1_gauss->GetXaxis()->SetTitle("x-pos (um)");
-    tg_intensity->GetXaxis()->SetTitle("x-pos (um)");
-  }
-  if( scan_z == "true") {
-    tg_ChX_t1->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ChX_t1_std->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ChX_t1_means->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ChX_tot_means->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ChX_counts->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ChX_t1_gauss->GetXaxis()->SetTitle("z-pos (um)");
-    tg_intensity->GetXaxis()->SetTitle("z-pos (um)");
-  }
-  if( scan_thr == "true") {
-    tg_ChX_t1->GetXaxis()->SetTitle("threshold (LSB)");
-    tg_ChX_t1_std->GetXaxis()->SetTitle("threshold (LSB)");
-    tg_ChX_t1_means->GetXaxis()->SetTitle("threshold (LSB)");
-    tg_ChX_tot_means->GetXaxis()->SetTitle("threshold (LSB)");
-    tg_ChX_counts->GetXaxis()->SetTitle("threshold (LSB)");
-    tg_ChX_t1_gauss->GetXaxis()->SetTitle("threshold (LSB)");
-    tg_intensity->GetXaxis()->SetTitle("threshold (LSB)");
-  }
-  
-  
-  
+  tg_intensity->GetYaxis()->SetTitle("z-pos (um)");
+  tg_intensity->GetZaxis()->SetTitle("intensity (nJ)");  
   
   TFile *f_out = new TFile(outdir+"/compare.root","RECREATE");
   
@@ -304,59 +284,58 @@ void compare(void) {
     
     
     Double_t t1 = get_toa_offset(CentA_t1);
+    if (t1 <-100 || t1 > 100) {
+      t1 = -100;
+    }
     Double_t t1_mean = CentA_t1->GetMean();
     Double_t counts = CentA_t1->GetEntries();
     Double_t t1_std  = CentA_t1->GetStdDev();
     Double_t tot_mean = CentA_tot->GetMean();
     Double_t tot_std  = CentA_tot->GetStdDev();
     
-    Float_t t1_gauss_mu =0;
-    Float_t t1_gauss_sigma =0;
     
 //     get_gauss_params(CentA_t1,&t1_gauss_mu,&t1_gauss_sigma);
     
     
-  if ( scan_thr == "true" ){
-    cout << "thresh: " << thr_list[i] << endl;
-  } else {
+
     cout << "x pos: " << xlist[i] << endl;
     cout << "y pos: " << ylist[i] << endl;
     cout << "z pos: " << zlist[i] << endl;
-  }
+
 //     if( t1 > 100 || t1 < -100) {
 //         t1 = -100;
 //     }
     
     Double_t graph_x;
-    if( scan_thr == "true") {
-      graph_x = thr_list[i].Atoi();
-    } else if( scan_x == "true") {
-      graph_x = xlist[i].Atoi();
-    } else if( scan_z == "true") {
-      graph_x = zlist[i].Atoi();
-    } else {
-      graph_x = ylist[i].Atoi();
-    }
+
+    graph_x = ylist[i].Atoi();
+
     
     Double_t intensity = intensitylist[i].Atof();
-//     cout << "intensity" << intensitylist[i] << endl;
-//     Double_t intensity = i;
+    cout << "intensity" << intensitylist[i] << endl;
+    cout << "counts  : " << counts << endl;
+
+    Double_t graph_y = zlist[i].Atoi();
+//     cout << "z: " << graph_y << endl;
     
-    if( zlist[i].Atoi() == 4500 || true) { // select only points in the anode plane
+//     if( xlist[i].Atoi() == 3900 ) {
+    if( xlist[i].Atoi() == 4750  || true) {
+//     if( xlist[i].Atoi() == 5600 ) { // this scan did not finish!
+      
+
+
         static Int_t point_no = 0;
-        tg_ChX_t1->SetPoint(point_no,graph_x,t1);
-        tg_ChX_t1_means->SetPoint(point_no,graph_x,t1_mean);
-        tg_ChX_t1_means->SetPointError (point_no, 0, t1_std);
-        tg_ChX_tot_means->SetPoint(point_no,graph_x,tot_mean);
-        tg_ChX_tot_means->SetPointError (point_no, 0, tot_std);
-        tg_ChX_t1_std->SetPoint(point_no, graph_x, t1_std);
+        tg_ChX_t1->SetPoint(point_no,graph_x,graph_y,t1);
+        tg_ChX_t1_means->SetPoint(point_no,graph_x,graph_y,t1_mean);
+        tg_ChX_t1_means->SetPointError (point_no, 0, 0 ,t1_std);
+        tg_ChX_tot_means->SetPoint(point_no,graph_x,graph_y,tot_mean);
+        tg_ChX_tot_means->SetPointError (point_no, 0, 0, tot_std);
+        tg_ChX_t1_std->SetPoint(point_no, graph_x, graph_y, t1_std);
         
-        tg_ChX_counts->SetPoint(point_no,graph_x,counts);
+//        tg_ChX_counts->SetPoint(point_no,graph_x,graph_y,counts);
         
-        tg_ChX_t1_gauss->SetPoint(point_no,graph_x,t1_gauss_mu);
-        tg_ChX_t1_gauss->SetPointError (point_no, 0, t1_gauss_sigma);
         
-        tg_intensity->SetPoint(point_no,graph_x,intensity);
+//        tg_intensity->SetPoint(point_no,graph_x,graph_y,intensity);
         
         TH1F* hist_new = (TH1F*) CentA_t1->Clone();
         TString new_hist_name;
@@ -426,44 +405,27 @@ void compare(void) {
   tg_ChX_t1->SetLineWidth(4);
   tg_ChX_t1->SetMarkerColor(4);
   tg_ChX_t1->SetMarkerStyle(21);
-  draw_and_save(tg_ChX_t1,"tg_Ch"+chan+"_t1",outdir,"AP");
+  draw_and_save(tg_ChX_t1,"tg_ChX_t1",outdir,"tri1 pcol");
 //   tg_ChX_t1->Draw("AP");
   
   tg_ChX_t1_means->SetLineColor(2);
   tg_ChX_t1_means->SetLineWidth(4);
   tg_ChX_t1_means->SetMarkerColor(4);
   tg_ChX_t1_means->SetMarkerStyle(21);
-  draw_and_save(tg_ChX_t1_means,"tg_Ch"+chan+"_t1_means",outdir,"AP");
-  
-  tg_ChX_t1_gauss->SetLineColor(2);
-  tg_ChX_t1_gauss->SetLineWidth(4);
-  tg_ChX_t1_gauss->SetMarkerColor(4);
-  tg_ChX_t1_gauss->SetMarkerStyle(21);
-  draw_and_save(tg_ChX_t1_gauss,"tg_Ch"+chan+"_t1_gauss",outdir,"AP");
+  draw_and_save(tg_ChX_t1_means,"tg_Ch"+chan+"_t1_means",outdir,"tri1 pcol");
   
   tg_ChX_tot_means->SetLineColor(2);
   tg_ChX_tot_means->SetLineWidth(4);
   tg_ChX_tot_means->SetMarkerColor(4);
   tg_ChX_tot_means->SetMarkerStyle(21);
-  draw_and_save(tg_ChX_tot_means,"tg_Ch"+chan+"_tot_means",outdir,"AP");
+  draw_and_save(tg_ChX_tot_means,"tg_Ch"+chan+"_tot_means",outdir,"tri1 pcol");
   
   tg_ChX_t1_std->SetLineColor(2);
   tg_ChX_t1_std->SetLineWidth(4);
   tg_ChX_t1_std->SetMarkerColor(4);
   tg_ChX_t1_std->SetMarkerStyle(21);
-  draw_and_save(tg_ChX_t1_std,"tg_Ch"+chan+"_t1_std",outdir,"AP");
+  draw_and_save(tg_ChX_t1_std,"tg_Ch"+chan+"_t1_std",outdir,"tri1 pcol");
   
-  tg_ChX_counts->SetLineColor(2);
-  tg_ChX_counts->SetLineWidth(4);
-  tg_ChX_counts->SetMarkerColor(4);
-  tg_ChX_counts->SetMarkerStyle(21);
-  draw_and_save(tg_ChX_counts,"tg_Ch"+chan+"_counts",outdir,"AP");
-  
-  tg_intensity->SetLineColor(2);
-  tg_intensity->SetLineWidth(4);
-  tg_intensity->SetMarkerColor(4);
-  tg_intensity->SetMarkerStyle(21);
-  draw_and_save(tg_intensity,"tg_intensity",outdir,"AP");
 
 //                                      _ _           _             
 //                          ___        | (_)         | |            
@@ -514,6 +476,11 @@ void compare(void) {
 //   toa_rms1->Draw("tri1");
 //   
 //   
+ 
+  
+//   TCanvas *c01 = new TCanvas("c_1","c_1",200,10,600,400);
+//   
+//   tg_ChX_t1->Draw("pcol");
   
   f_out->cd();
   tg_ChX_t1->Write();
