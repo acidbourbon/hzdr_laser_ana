@@ -1,1 +1,1 @@
-fpga=1483 chan=03 scan_z=true ./compare.sh ../data/z_scan_ASD8_02/
+TDC=1483 chan=04 scan_x=true ./compare.sh ../data/x_scan_ASD8_01/

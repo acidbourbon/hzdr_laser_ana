@@ -47,6 +47,18 @@ void draw_and_save(TObject *hist,TString name,TString outdir,TString draw_option
 }
 
 
+void get_gauss_params(TH1F* histogram, Float_t* target_mu, Float_t* target_sigma) {
+  histogram->Fit("gaus");
+  TF1 *fit = histogram->GetFunction("gaus");
+  Float_t chi2 = fit->GetChisquare();
+  Float_t p1 = fit->GetParameter(1);
+  Float_t e1 = fit->GetParError(1);
+  Float_t p2 = fit->GetParameter(2);
+  Float_t e2 = fit->GetParError(2);
+//   cout << "Gauss fit sigma: " << p2 << " +- " << e2 << "ns" << endl;
+  *target_mu = p1;
+  *target_sigma = p2;
+}
 
 
 Float_t get_toa_offset(TH1F* toa0) {
@@ -134,10 +146,11 @@ void compare(void) {
 //   Float_t thresh_start = 0;
 //   Float_t thresh_stop  = 127;
     
-  TString TDC=from_env("fpga","1482");
+  TString TDC=from_env("TDC","1482");
   TString chan=from_env("chan","05");
     
   TString outdir=from_env("outdir","./");
+  TString scan_x=from_env("scan_x","false");
   TString scan_z=from_env("scan_z","false");
   TString scan_thr=from_env("scan_thr","false");
   
@@ -173,6 +186,12 @@ void compare(void) {
   tg_ChX_t1_means->GetXaxis()->SetTitle("y-pos (um)");
   tg_ChX_t1_means->GetYaxis()->SetTitle("t1 (ns)");
   
+  TGraphErrors *tg_ChX_t1_gauss = new TGraphErrors();
+  tg_ChX_t1_gauss->SetTitle("t1 Ch"+chan+" gauss");
+  tg_ChX_t1_gauss->SetName("tg_Ch"+chan+"_t1_gauss");
+  tg_ChX_t1_gauss->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_t1_gauss->GetYaxis()->SetTitle("t1 (ns)");
+  
 
   TGraphErrors *tg_ChX_tot_means = new TGraphErrors();
   tg_ChX_tot_means->SetTitle("tot Ch"+chan+" means");
@@ -192,12 +211,29 @@ void compare(void) {
   tg_ChX_counts->GetXaxis()->SetTitle("y-pos (um)");
   tg_ChX_counts->GetYaxis()->SetTitle("counts");
   
+  TGraph *tg_intensity = new TGraph();
+  tg_intensity->SetTitle("Laser Intensity");
+  tg_intensity->SetName("tg_intensity");
+  tg_intensity->GetXaxis()->SetTitle("y-pos (um)");
+  tg_intensity->GetYaxis()->SetTitle("intensity (nJ)");
+  
+  if( scan_x == "true") {
+    tg_ChX_t1->GetXaxis()->SetTitle("x-pos (um)");
+    tg_ChX_t1_std->GetXaxis()->SetTitle("x-pos (um)");
+    tg_ChX_t1_means->GetXaxis()->SetTitle("x-pos (um)");
+    tg_ChX_tot_means->GetXaxis()->SetTitle("x-pos (um)");
+    tg_ChX_counts->GetXaxis()->SetTitle("x-pos (um)");
+    tg_ChX_t1_gauss->GetXaxis()->SetTitle("x-pos (um)");
+    tg_intensity->GetXaxis()->SetTitle("x-pos (um)");
+  }
   if( scan_z == "true") {
     tg_ChX_t1->GetXaxis()->SetTitle("z-pos (um)");
     tg_ChX_t1_std->GetXaxis()->SetTitle("z-pos (um)");
     tg_ChX_t1_means->GetXaxis()->SetTitle("z-pos (um)");
     tg_ChX_tot_means->GetXaxis()->SetTitle("z-pos (um)");
     tg_ChX_counts->GetXaxis()->SetTitle("z-pos (um)");
+    tg_ChX_t1_gauss->GetXaxis()->SetTitle("z-pos (um)");
+    tg_intensity->GetXaxis()->SetTitle("z-pos (um)");
   }
   if( scan_thr == "true") {
     tg_ChX_t1->GetXaxis()->SetTitle("threshold (LSB)");
@@ -205,6 +241,8 @@ void compare(void) {
     tg_ChX_t1_means->GetXaxis()->SetTitle("threshold (LSB)");
     tg_ChX_tot_means->GetXaxis()->SetTitle("threshold (LSB)");
     tg_ChX_counts->GetXaxis()->SetTitle("threshold (LSB)");
+    tg_ChX_t1_gauss->GetXaxis()->SetTitle("threshold (LSB)");
+    tg_intensity->GetXaxis()->SetTitle("threshold (LSB)");
   }
   
   
@@ -234,6 +272,7 @@ void compare(void) {
   std::vector<TString> xlist;
   std::vector<TString> ylist;
   std::vector<TString> zlist;
+  std::vector<TString> intensitylist;
   std::vector<TString> thr_list; 
   
 //   std::vector<TH1F*> hist_list;
@@ -245,6 +284,8 @@ void compare(void) {
     ylist = file_to_str_array("ylist.txt");
     zlist = file_to_str_array("zlist.txt");
   }
+  
+  intensitylist = file_to_str_array("intensity_list.txt");
   
   TLegend* leg = new TLegend(0.1,0.7,0.48,0.9);
 //   leg->SetHeader("The Legend Title"); // option "C" allows to center the header
@@ -286,6 +327,11 @@ void compare(void) {
     Double_t tot_mean = CentA_tot->GetMean();
     Double_t tot_std  = CentA_tot->GetStdDev();
     
+    Float_t t1_gauss_mu =0;
+    Float_t t1_gauss_sigma =0;
+    
+//     get_gauss_params(CentA_t1,&t1_gauss_mu,&t1_gauss_sigma);
+    
     
   if ( scan_thr == "true" ){
     cout << "thresh: " << thr_list[i] << endl;
@@ -301,11 +347,17 @@ void compare(void) {
     Double_t graph_x;
     if( scan_thr == "true") {
       graph_x = thr_list[i].Atoi();
+    } else if( scan_x == "true") {
+      graph_x = xlist[i].Atoi();
     } else if( scan_z == "true") {
       graph_x = zlist[i].Atoi();
     } else {
       graph_x = ylist[i].Atoi();
     }
+    
+    Double_t intensity = intensitylist[i].Atof();
+//     cout << "intensity" << intensitylist[i] << endl;
+//     Double_t intensity = i;
     
     if( zlist[i].Atoi() == 4500 || true) { // select only points in the anode plane
         static Int_t point_no = 0;
@@ -318,6 +370,10 @@ void compare(void) {
         
         tg_ChX_counts->SetPoint(point_no,graph_x,counts);
         
+        tg_ChX_t1_gauss->SetPoint(point_no,graph_x,t1_gauss_mu);
+        tg_ChX_t1_gauss->SetPointError (point_no, 0, t1_gauss_sigma);
+        
+        tg_intensity->SetPoint(point_no,graph_x,intensity);
         
         TH1F* hist_new = (TH1F*) CentA_t1->Clone();
         TString new_hist_name;
@@ -387,7 +443,7 @@ void compare(void) {
   tg_ChX_t1->SetLineWidth(4);
   tg_ChX_t1->SetMarkerColor(4);
   tg_ChX_t1->SetMarkerStyle(21);
-  draw_and_save(tg_ChX_t1,"tg_ChX_t1",outdir,"AP");
+  draw_and_save(tg_ChX_t1,"tg_Ch"+chan+"_t1",outdir,"AP");
 //   tg_ChX_t1->Draw("AP");
   
   tg_ChX_t1_means->SetLineColor(2);
@@ -395,6 +451,12 @@ void compare(void) {
   tg_ChX_t1_means->SetMarkerColor(4);
   tg_ChX_t1_means->SetMarkerStyle(21);
   draw_and_save(tg_ChX_t1_means,"tg_Ch"+chan+"_t1_means",outdir,"AP");
+  
+  tg_ChX_t1_gauss->SetLineColor(2);
+  tg_ChX_t1_gauss->SetLineWidth(4);
+  tg_ChX_t1_gauss->SetMarkerColor(4);
+  tg_ChX_t1_gauss->SetMarkerStyle(21);
+  draw_and_save(tg_ChX_t1_gauss,"tg_Ch"+chan+"_t1_gauss",outdir,"AP");
   
   tg_ChX_tot_means->SetLineColor(2);
   tg_ChX_tot_means->SetLineWidth(4);
@@ -413,6 +475,12 @@ void compare(void) {
   tg_ChX_counts->SetMarkerColor(4);
   tg_ChX_counts->SetMarkerStyle(21);
   draw_and_save(tg_ChX_counts,"tg_Ch"+chan+"_counts",outdir,"AP");
+  
+  tg_intensity->SetLineColor(2);
+  tg_intensity->SetLineWidth(4);
+  tg_intensity->SetMarkerColor(4);
+  tg_intensity->SetMarkerStyle(21);
+  draw_and_save(tg_intensity,"tg_intensity",outdir,"AP");
 
 //                                      _ _           _             
 //                          ___        | (_)         | |            

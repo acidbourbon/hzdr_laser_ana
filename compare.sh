@@ -16,4 +16,9 @@ fi
 
 find $scan_dir -name "*.root" | sort > root_files.txt
 
+rm intensity_list.txt
+for i in $(find $scan_dir -name "laser_intensity.txt" | sort); do
+echo $(cat $i) | sed 's/,/./' >> intensity_list.txt
+done
+
 root -l 'compare.C()' 
