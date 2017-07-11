@@ -1,5 +1,13 @@
 // this is the compare.C for the 
 
+#define use_intersect false // use fit+ intersect methond, else use 50% of cumulant
+
+#define t1_min -100
+#define t1_max 200
+
+#define t1_min -200
+#define t1_max 200
+
 
 Bool_t file_exists(TString fname){
   
@@ -48,7 +56,7 @@ void draw_and_save(TObject *hist,TString name,TString outdir,TString draw_option
 
 
 
-Float_t get_toa_offset(TH1F* toa0) {
+void get_toa_offset(TH1F* toa0, Float_t* intersect, Float_t* midpoint) {
     
   TH1* cum_toa0 = toa0->GetCumulative();
   Int_t cum_toa0_sum = cum_toa0->GetBinContent(cum_toa0->GetEntries());
@@ -56,9 +64,11 @@ Float_t get_toa_offset(TH1F* toa0) {
   
   Float_t cum_toa0_up   = ((Float_t) cum_toa0_sum) *0.6;
   Float_t cum_toa0_down = ((Float_t) cum_toa0_sum) *0.1;
+  Float_t cum_toa0_mid = ((Float_t) cum_toa0_sum) *0.5;
   
   Int_t cum_toa0_left_bin   = cum_toa0->FindFirstBinAbove(cum_toa0_down,2);
   Int_t cum_toa0_right_bin  = cum_toa0->FindFirstBinAbove(cum_toa0_up,2);
+  Int_t cum_toa0_mid_bin    = cum_toa0->FindFirstBinAbove(cum_toa0_mid,2);
   
 //   for (Int_t i = 1; i<= cum_toa0->GetEntries(); i++){
 //     Float_t cur_val = cum_toa0->GetBinContent(i);
@@ -73,6 +83,7 @@ Float_t get_toa_offset(TH1F* toa0) {
   TAxis *xaxis = cum_toa0->GetXaxis();
   Float_t cum_toa0_left  = xaxis->GetBinCenter(cum_toa0_left_bin);
   Float_t cum_toa0_right = xaxis->GetBinCenter(cum_toa0_right_bin);
+  *midpoint = xaxis->GetBinCenter(cum_toa0_mid_bin);
   
 //   cout << "toa0 entries  " << cum_toa0->GetEntries() <<endl;
 //   cout << "toa0 up   " << cum_toa0_up <<endl;
@@ -90,13 +101,13 @@ Float_t get_toa_offset(TH1F* toa0) {
   
   cum_toa0->Fit(fa,"q","", cum_toa0_left,cum_toa0_right);
   
-  Float_t x_intersect = -fa->GetParameter(0)/fa->GetParameter(1);
+  *intersect = -fa->GetParameter(0)/fa->GetParameter(1);
   
 //   cout << "x intersect " << x_intersect << endl;
   
 //   draw_and_save(cum_toa0,"cum_toa0","./","");
   
-  return x_intersect;
+//   return x_intersect;
 
   
 }
@@ -144,8 +155,8 @@ void compare_vol(void) {
   
   
   TGraph2D *tg_ChX_t1 = new TGraph2D();
-  tg_ChX_t1->SetTitle("t1 ChX");
-  tg_ChX_t1->SetName("tg_ChX_t1");
+  tg_ChX_t1->SetTitle("t1 Ch"+chan);
+  tg_ChX_t1->SetName("tg_Ch"+chan+"_t1");
   tg_ChX_t1->GetXaxis()->SetTitle("y-pos (um)");
   tg_ChX_t1->GetXaxis()->SetTitleOffset(2.4);
   tg_ChX_t1->GetYaxis()->SetTitle("z-pos (um)");
@@ -155,8 +166,8 @@ void compare_vol(void) {
   
   
   TGraph2DErrors *tg_ChX_t1_means = new TGraph2DErrors();
-  tg_ChX_t1_means->SetTitle("t1 ChX means");
-  tg_ChX_t1_means->SetName("tg_ChX_t1_means");
+  tg_ChX_t1_means->SetTitle("t1 Ch"+chan+" means");
+  tg_ChX_t1_means->SetName("tg_Ch"+chan+"_t1_means");
   tg_ChX_t1_means->GetXaxis()->SetTitle("y-pos (um)");
   tg_ChX_t1_means->GetXaxis()->SetTitleOffset(2.4);
   tg_ChX_t1_means->GetYaxis()->SetTitle("z-pos (um)");
@@ -165,8 +176,8 @@ void compare_vol(void) {
   tg_ChX_t1_means->GetZaxis()->SetTitleOffset(1.4);
   
   TGraph2DErrors *tg_ChX_tot_means = new TGraph2DErrors();
-  tg_ChX_tot_means->SetTitle("tot ChX means");
-  tg_ChX_tot_means->SetName("tg_ChX_tot_means");
+  tg_ChX_tot_means->SetTitle("tot Ch"+chan+" means");
+  tg_ChX_tot_means->SetName("tg_Ch"+chan+"_tot_means");
   tg_ChX_tot_means->GetXaxis()->SetTitle("y-pos (um)");
   tg_ChX_tot_means->GetXaxis()->SetTitleOffset(2.4);
   tg_ChX_tot_means->GetYaxis()->SetTitle("z-pos (um)");
@@ -187,8 +198,8 @@ void compare_vol(void) {
 //   tg_ChX_t1_std->GetYaxis()->SetTitle("t1 StdDev (ns)");
   
   TGraph2D *tg_ChX_t1_std = new TGraph2D();
-  tg_ChX_t1_std->SetTitle("t1 ChX StdDevs");
-  tg_ChX_t1_std->SetName("tg_ChX_t1_std");
+  tg_ChX_t1_std->SetTitle("t1 Ch"+chan+" StdDevs");
+  tg_ChX_t1_std->SetName("tg_Ch"+chan+"_t1_std");
   tg_ChX_t1_std->GetXaxis()->SetTitle("y-pos (um)");
   tg_ChX_t1_std->GetXaxis()->SetTitleOffset(2.4);
   tg_ChX_t1_std->GetYaxis()->SetTitle("z-pos (um)");
@@ -199,7 +210,7 @@ void compare_vol(void) {
   
   TGraph2D *tg_ChX_counts = new TGraph2D();
   tg_ChX_counts->SetTitle("Ch"+chan+" Counts");
-  tg_ChX_counts->SetName("tg_ChX_counts");
+  tg_ChX_counts->SetName("tg_Ch"+chan+"_counts");
   tg_ChX_counts->GetXaxis()->SetTitle("y-pos (um)");
   tg_ChX_counts->GetYaxis()->SetTitle("z-pos (um)");
   tg_ChX_counts->GetZaxis()->SetTitle("counts");
@@ -256,6 +267,7 @@ void compare_vol(void) {
 //   leg->AddEntry("f1","Function abs(#frac{sin(x)}{x})","l");
 //   leg->AddEntry("gr","Graph with error bars","lep");
   
+  Int_t point_no = 0;
   
   for (Int_t i = 0; i< list.size(); i++){
     
@@ -279,13 +291,20 @@ void compare_vol(void) {
     f->cd();
     
     TH1F* CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_t1"));  
+    
+    
+    
     TH1F* CentA_tot = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_tot"));  
 //     CentA_t1->Rebin(4);
     
     
-    Double_t t1 = get_toa_offset(CentA_t1);
-    if (t1 <-100 || t1 > 100) {
-      t1 = -100;
+    Float_t intersect = 0;
+    Float_t midpoint = 0;
+    get_toa_offset(CentA_t1, &intersect, &midpoint);
+
+    Float_t t1 = midpoint;
+    if(use_intersect) {
+      t1 = intersect;
     }
     Double_t t1_mean = CentA_t1->GetMean();
     Double_t counts = CentA_t1->GetEntries();
@@ -318,13 +337,15 @@ void compare_vol(void) {
     Double_t graph_y = zlist[i].Atoi();
 //     cout << "z: " << graph_y << endl;
     
+    if( t1 < t1_max && t1 > t1_min) {
 //     if( xlist[i].Atoi() == 3900 ) {
-    if( xlist[i].Atoi() == 4750  || true) {
+//     if( xlist[i].Atoi() == 3400 || false) {
+//     if( xlist[i].Atoi() == 3300 || false) {
+//     if( xlist[i].Atoi() == 3200 || false) {
 //     if( xlist[i].Atoi() == 5600 ) { // this scan did not finish!
       
 
 
-        static Int_t point_no = 0;
         tg_ChX_t1->SetPoint(point_no,graph_x,graph_y,t1);
         tg_ChX_t1_means->SetPoint(point_no,graph_x,graph_y,t1_mean);
         tg_ChX_t1_means->SetPointError (point_no, 0, 0 ,t1_std);
@@ -405,7 +426,7 @@ void compare_vol(void) {
   tg_ChX_t1->SetLineWidth(4);
   tg_ChX_t1->SetMarkerColor(4);
   tg_ChX_t1->SetMarkerStyle(21);
-  draw_and_save(tg_ChX_t1,"tg_ChX_t1",outdir,"tri1 pcol");
+  draw_and_save(tg_ChX_t1,"tg_Ch"+chan+"_t1",outdir,"tri1 pcol");
 //   tg_ChX_t1->Draw("AP");
   
   tg_ChX_t1_means->SetLineColor(2);

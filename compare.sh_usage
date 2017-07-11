@@ -1,1 +1,3 @@
 TDC=1483 chan=04 scan_x=true ./compare.sh ../data/x_scan_ASD8_01/
+TDC=1482 chan=05 scan_thr=true ./compare.sh ../data/thr_scan_PASTTREC_
+TDC=1483 chan=05 scan_z=true ./compare.sh ../data/z_scan_ASD8_07/

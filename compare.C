@@ -48,8 +48,25 @@ void draw_and_save(TObject *hist,TString name,TString outdir,TString draw_option
 
 
 void get_gauss_params(TH1F* histogram, Float_t* target_mu, Float_t* target_sigma) {
-  histogram->Fit("gaus");
-  TF1 *fit = histogram->GetFunction("gaus");
+//   histogram->Fit("gaus");
+//   TF1 *fit = histogram->GetFunction("gaus");
+  
+  Float_t prior_mean = histogram->GetMean();
+  Float_t prior_ampl = histogram->GetEntries();
+  
+  TF1 *fit = new TF1("myfit","gaus", prior_mean-60, prior_mean+60);
+
+  fit->SetParName(0,"ampl");
+  fit->SetParName(1,"mu");
+  fit->SetParName(2,"sigma");
+  fit->SetParameter(0, prior_ampl);
+  fit->SetParameter(1, prior_mean);
+  fit->SetParameter(2, 10);
+
+  histogram->Fit("myfit");
+  
+  
+  
   Float_t chi2 = fit->GetChisquare();
   Float_t p1 = fit->GetParameter(1);
   Float_t e1 = fit->GetParError(1);
@@ -61,7 +78,7 @@ void get_gauss_params(TH1F* histogram, Float_t* target_mu, Float_t* target_sigma
 }
 
 
-Float_t get_toa_offset(TH1F* toa0) {
+void get_toa_offset(TH1F* toa0, Float_t* intersect, Float_t* midpoint) {
     
   TH1* cum_toa0 = toa0->GetCumulative();
   Int_t cum_toa0_sum = cum_toa0->GetBinContent(cum_toa0->GetEntries());
@@ -69,9 +86,11 @@ Float_t get_toa_offset(TH1F* toa0) {
   
   Float_t cum_toa0_up   = ((Float_t) cum_toa0_sum) *0.6;
   Float_t cum_toa0_down = ((Float_t) cum_toa0_sum) *0.1;
+  Float_t cum_toa0_mid = ((Float_t) cum_toa0_sum) *0.5;
   
   Int_t cum_toa0_left_bin   = cum_toa0->FindFirstBinAbove(cum_toa0_down,2);
   Int_t cum_toa0_right_bin  = cum_toa0->FindFirstBinAbove(cum_toa0_up,2);
+  Int_t cum_toa0_mid_bin    = cum_toa0->FindFirstBinAbove(cum_toa0_mid,2);
   
 //   for (Int_t i = 1; i<= cum_toa0->GetEntries(); i++){
 //     Float_t cur_val = cum_toa0->GetBinContent(i);
@@ -86,6 +105,7 @@ Float_t get_toa_offset(TH1F* toa0) {
   TAxis *xaxis = cum_toa0->GetXaxis();
   Float_t cum_toa0_left  = xaxis->GetBinCenter(cum_toa0_left_bin);
   Float_t cum_toa0_right = xaxis->GetBinCenter(cum_toa0_right_bin);
+  *midpoint = xaxis->GetBinCenter(cum_toa0_mid_bin);
   
 //   cout << "toa0 entries  " << cum_toa0->GetEntries() <<endl;
 //   cout << "toa0 up   " << cum_toa0_up <<endl;
@@ -103,13 +123,13 @@ Float_t get_toa_offset(TH1F* toa0) {
   
   cum_toa0->Fit(fa,"q","", cum_toa0_left,cum_toa0_right);
   
-  Float_t x_intersect = -fa->GetParameter(0)/fa->GetParameter(1);
+  *intersect = -fa->GetParameter(0)/fa->GetParameter(1);
   
 //   cout << "x intersect " << x_intersect << endl;
   
 //   draw_and_save(cum_toa0,"cum_toa0","./","");
   
-  return x_intersect;
+//   return x_intersect;
 
   
 }
@@ -303,17 +323,19 @@ void compare(void) {
 //     CentA_t1->Rebin(4);
     
     
-    Double_t t1 = get_toa_offset(CentA_t1);
+    Float_t t1 = 0;
+    Float_t midpoint = 0;
+    get_toa_offset(CentA_t1, &t1, &midpoint);
     Double_t t1_mean = CentA_t1->GetMean();
     Double_t counts = CentA_t1->GetEntries();
     Double_t t1_std  = CentA_t1->GetStdDev();
     Double_t tot_mean = CentA_tot->GetMean();
     Double_t tot_std  = CentA_tot->GetStdDev();
     
-    Float_t t1_gauss_mu =0;
+    Float_t t1_gauss_mu = midpoint;
     Float_t t1_gauss_sigma =0;
     
-//     get_gauss_params(CentA_t1,&t1_gauss_mu,&t1_gauss_sigma);
+    //get_gauss_params(CentA_t1,&t1_gauss_mu,&t1_gauss_sigma);
     
     
   if ( scan_thr == "true" ){
@@ -341,8 +363,8 @@ void compare(void) {
     Double_t intensity = intensitylist[i].Atof();
 //     cout << "intensity" << intensitylist[i] << endl;
 //     Double_t intensity = i;
-    
-    if( zlist[i].Atoi() == 4500 || true) { // select only points in the anode plane
+    cout << "test" << endl;
+    if( true) { // select only points in the anode plane
         static Int_t point_no = 0;
         tg_ChX_t1->SetPoint(point_no,graph_x,t1);
         tg_ChX_t1_means->SetPoint(point_no,graph_x,t1_mean);
@@ -464,6 +486,18 @@ void compare(void) {
   tg_intensity->SetMarkerColor(4);
   tg_intensity->SetMarkerStyle(21);
   draw_and_save(tg_intensity,"tg_intensity",outdir,"AP");
+  tg_intensity->GetYaxis()->SetRangeUser(0.0,30.0);
+  
+  
+  
+  TSeqCollection * canvases = gROOT->GetListOfCanvases();
+  
+  for (Int_t i = 0; i < canvases->GetEntries(); i++) {
+    ((TCanvas*) canvases->At(i))->Modified();
+    ((TCanvas*) canvases->At(i))->Update();
+    
+    cout << ((TCanvas*) canvases->At(i))->GetName() << endl;
+  }
 
 //                                      _ _           _             
 //                          ___        | (_)         | |            
