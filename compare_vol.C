@@ -44,6 +44,19 @@ TString from_env(TString env_var,TString default_val){
 void draw_and_save(TObject *hist,TString name,TString outdir,TString draw_options) {
   
 //   if(DRAW_PNG) {
+	//~ gStyle->SetNumberContours(255);   // finer palette
+	//~ gStyle->SetPalette(1,0); 
+	//~ // //create pretty High contrast color palette 
+		{
+			const Int_t NRGBs = 5;
+			const Int_t NCont = 80; 
+			Double_t stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
+			Double_t reds[NRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 };
+			Double_t greens[NRGBs] = { 0.00, 0.81, 1.00, 0.20, 0.00 };
+			Double_t blues[NRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 };
+			Int_t  FI = TColor::CreateGradientColorTable(NRGBs, stops, reds, greens, blues, NCont);
+			gStyle->SetNumberContours(NCont);
+		}
     TCanvas *c = new TCanvas("c_"+name,"c_"+name,200,10,1024,786);
     c->cd();
     hist->Draw(draw_options);
@@ -280,10 +293,11 @@ void compare_vol(void) {
     
     
     cout << "opening file: "<< fname <<endl; 
-    if (not(file_exists(fname))){
-      cout << fname << " does not exist" << endl;
-      continue;
-    }
+     //~ fstream is not working !
+    //~ if (not(file_exists(fname))){
+      //~ cout << fname << " does not exist" << endl;
+      //~ continue;
+    //~ }
     
     
     TFile *f = new TFile(fname);
@@ -292,26 +306,42 @@ void compare_vol(void) {
     
     TH1F* CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_t1"));  
     
-    
+    //  cutting ghots signals with long drift times t1 > 90 ns
+		Int_t binNumber = CentA_t1->GetNbinsX() ;
+		Float_t T1MaxCut (90);
+		for(Int_t ibin =  CentA_t1->FindBin(T1MaxCut) ; ibin < binNumber ; ibin++){
+			CentA_t1->SetBinContent(ibin,0);		
+			}
+		Float_t T1MinCut (-55);
+		for(Int_t ibin = 0 ; ibin < CentA_t1->FindBin(T1MinCut)   ; ibin++){
+			CentA_t1->SetBinContent(ibin,0);		
+			}
     
     TH1F* CentA_tot = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_tot"));  
 //     CentA_t1->Rebin(4);
+    TH1F* RefChan_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+REFCHAN+"_t1"));  
     
     
     Float_t intersect = 0;
     Float_t midpoint = 0;
     get_toa_offset(CentA_t1, &intersect, &midpoint);
-
+	CentA_t1->DrawCopy("hist e");
+	CentA_t1->SaveAs("www.png");
     Float_t t1 = midpoint;
     if(use_intersect) {
       t1 = intersect;
     }
     Double_t t1_mean = CentA_t1->GetMean();
     Double_t counts = CentA_t1->GetEntries();
+    Double_t ref_counts = RefChan_t1->GetEntries();
     Double_t t1_std  = CentA_t1->GetStdDev();
     Double_t tot_mean = CentA_tot->GetMean();
     Double_t tot_std  = CentA_tot->GetStdDev();
     
+    Double_t efficiency = 0;
+    if (ref_counts > 0) {
+      efficiency = counts/ref_counts;
+    }
     
 //     get_gauss_params(CentA_t1,&t1_gauss_mu,&t1_gauss_sigma);
     
@@ -377,7 +407,7 @@ void compare_vol(void) {
     
     
     leg->AddEntry(CentA_t1,"entry","l");
-    CentA_t1->SetLineColor(color_contrast_array[i]);
+   // CentA_t1->SetLineColor(color_contrast_array[i]);
     CentA_t1->GetYaxis()->SetRangeUser(0,1000);
     
 //     if(i > 0) {
@@ -423,10 +453,16 @@ void compare_vol(void) {
 //  tg_ChX_t1->SetMarkerStyle(21+i);
   
   tg_ChX_t1->SetLineColor(2);
-  tg_ChX_t1->SetLineWidth(4);
-  tg_ChX_t1->SetMarkerColor(4);
-  tg_ChX_t1->SetMarkerStyle(21);
+  tg_ChX_t1->SetLineWidth(1);
+  tg_ChX_t1->SetMarkerColor(kBlack);
+  tg_ChX_t1->SetMarkerStyle(6);
   draw_and_save(tg_ChX_t1,"tg_Ch"+chan+"_t1",outdir,"tri1 pcol");
+		tg_ChX_t1->GetXaxis()->SetTitle("y-pos [#mum]");
+	  tg_ChX_t1->GetXaxis()->SetTitleOffset(2.4);
+	  tg_ChX_t1->GetYaxis()->SetTitle("z-pos [#mum]");
+	  tg_ChX_t1->GetYaxis()->SetTitleOffset(2.4);
+	  tg_ChX_t1->GetZaxis()->SetTitle("t1 [ns]");
+	  tg_ChX_t1->GetZaxis()->SetTitleOffset(1.4);
 //   tg_ChX_t1->Draw("AP");
   
   tg_ChX_t1_means->SetLineColor(2);

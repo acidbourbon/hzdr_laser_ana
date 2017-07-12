@@ -1,5 +1,7 @@
 // this is the compare.C for the 
 
+#define use_intersect false // use fit+ intersect methond, else use 50% of cumulant
+#define REFCHAN "08"
 
 
 Bool_t file_exists(TString fname){
@@ -37,6 +39,19 @@ TString from_env(TString env_var,TString default_val){
 void draw_and_save(TObject *hist,TString name,TString outdir,TString draw_options) {
   
 //   if(DRAW_PNG) {
+	//~ gStyle->SetNumberContours(255);   // finer palette
+	//~ gStyle->SetPalette(1,0); 
+	//~ // //create pretty High contrast color palette 
+		{
+			const Int_t NRGBs = 5;
+			const Int_t NCont = 80; 
+			Double_t stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
+			Double_t reds[NRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 };
+			Double_t greens[NRGBs] = { 0.00, 0.81, 1.00, 0.20, 0.00 };
+			Double_t blues[NRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 };
+			Int_t  FI = TColor::CreateGradientColorTable(NRGBs, stops, reds, greens, blues, NCont);
+			gStyle->SetNumberContours(NCont);
+		}
     TCanvas *c = new TCanvas("c_"+name,"c_"+name,200,10,1024,786);
     c->cd();
     hist->Draw(draw_options);
@@ -214,6 +229,12 @@ void compare(void) {
   tg_ChX_counts->GetXaxis()->SetTitle("y-pos (um)");
   tg_ChX_counts->GetYaxis()->SetTitle("counts");
   
+  TGraph *tg_ChX_efficiency = new TGraph();
+  tg_ChX_efficiency->SetTitle("Ch"+chan+" Efficiency");
+  tg_ChX_efficiency->SetName("tg_ChX_efficiency");
+  tg_ChX_efficiency->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_efficiency->GetYaxis()->SetTitle("efficiency");
+  
   TGraph *tg_intensity = new TGraph();
   tg_intensity->SetTitle("Laser Intensity");
   tg_intensity->SetName("tg_intensity");
@@ -228,6 +249,7 @@ void compare(void) {
     tg_ChX_counts->GetXaxis()->SetTitle("x-pos (um)");
     tg_ChX_t1_gauss->GetXaxis()->SetTitle("x-pos (um)");
     tg_intensity->GetXaxis()->SetTitle("x-pos (um)");
+    tg_ChX_efficiency->GetXaxis()->SetTitle("x-pos (um)");
   }
   if( scan_z == "true") {
     tg_ChX_t1->GetXaxis()->SetTitle("z-pos (um)");
@@ -237,6 +259,7 @@ void compare(void) {
     tg_ChX_counts->GetXaxis()->SetTitle("z-pos (um)");
     tg_ChX_t1_gauss->GetXaxis()->SetTitle("z-pos (um)");
     tg_intensity->GetXaxis()->SetTitle("z-pos (um)");
+    tg_ChX_efficiency->GetXaxis()->SetTitle("z-pos (um)");
   }
   if( scan_thr == "true") {
     tg_ChX_t1->GetXaxis()->SetTitle("threshold (LSB)");
@@ -246,6 +269,7 @@ void compare(void) {
     tg_ChX_counts->GetXaxis()->SetTitle("threshold (LSB)");
     tg_ChX_t1_gauss->GetXaxis()->SetTitle("threshold (LSB)");
     tg_intensity->GetXaxis()->SetTitle("threshold (LSB)");
+    tg_ChX_efficiency->GetXaxis()->SetTitle("threshold (LSB)");
   }
   
   
@@ -319,18 +343,42 @@ void compare(void) {
     f->cd();
     
     TH1F* CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_t1"));  
+    
+    //  cutting ghots signals with long drift times t1 > 90 ns
+		Int_t binNumber = CentA_t1->GetNbinsX() ;
+		Float_t T1MaxCut (90);
+		for(Int_t ibin =  CentA_t1->FindBin(T1MaxCut) ; ibin < binNumber ; ibin++){
+			CentA_t1->SetBinContent(ibin,0);		
+			}
+		Float_t T1MinCut (-55);
+		for(Int_t ibin = 0 ; ibin < CentA_t1->FindBin(T1MinCut)   ; ibin++){
+			CentA_t1->SetBinContent(ibin,0);		
+			}
+    
     TH1F* CentA_tot = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_tot"));  
 //     CentA_t1->Rebin(4);
+    TH1F* RefChan_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+REFCHAN+"_t1"));  
     
     
-    Float_t t1 = 0;
+    Float_t intersect = 0;
     Float_t midpoint = 0;
-    get_toa_offset(CentA_t1, &t1, &midpoint);
+    get_toa_offset(CentA_t1, &intersect, &midpoint);
+
+    Float_t t1 = midpoint;
+    if(use_intersect) {
+      t1 = intersect;
+    }
     Double_t t1_mean = CentA_t1->GetMean();
     Double_t counts = CentA_t1->GetEntries();
+    Double_t ref_counts = RefChan_t1->GetEntries();
     Double_t t1_std  = CentA_t1->GetStdDev();
     Double_t tot_mean = CentA_tot->GetMean();
     Double_t tot_std  = CentA_tot->GetStdDev();
+    
+    Double_t efficiency = 0;
+    if (ref_counts > 0) {
+      efficiency = counts/ref_counts;
+    }
     
     Float_t t1_gauss_mu = midpoint;
     Float_t t1_gauss_sigma =0;
@@ -374,6 +422,7 @@ void compare(void) {
         tg_ChX_t1_std->SetPoint(point_no, graph_x, t1_std);
         
         tg_ChX_counts->SetPoint(point_no,graph_x,counts);
+        tg_ChX_efficiency->SetPoint(point_no,graph_x,efficiency);
         
         tg_ChX_t1_gauss->SetPoint(point_no,graph_x,t1_gauss_mu);
         tg_ChX_t1_gauss->SetPointError (point_no, 0, t1_gauss_sigma);
@@ -480,6 +529,12 @@ void compare(void) {
   tg_ChX_counts->SetMarkerColor(4);
   tg_ChX_counts->SetMarkerStyle(21);
   draw_and_save(tg_ChX_counts,"tg_Ch"+chan+"_counts",outdir,"AP");
+  
+  tg_ChX_efficiency->SetLineColor(2);
+  tg_ChX_efficiency->SetLineWidth(4);
+  tg_ChX_efficiency->SetMarkerColor(4);
+  tg_ChX_efficiency->SetMarkerStyle(21);
+  draw_and_save(tg_ChX_efficiency,"tg_Ch"+chan+"_efficiency",outdir,"AP");
   
   tg_intensity->SetLineColor(2);
   tg_intensity->SetLineWidth(4);
