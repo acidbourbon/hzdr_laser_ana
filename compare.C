@@ -4,6 +4,7 @@
 #define REFCHAN "08"
 
 
+
 Bool_t file_exists(TString fname){
   
   fstream src_file(fname.Data());
@@ -35,6 +36,30 @@ TString from_env(TString env_var,TString default_val){
 }
 
 
+void HistXCut(TH1F *hist, Float_t min, Float_t max) {
+  
+    //  cutting ghots signals with long drift times t1 > 90 ns
+    Int_t binNumber = hist->GetNbinsX() ;
+    for(Int_t ibin =  hist->FindBin(max) ; ibin < binNumber ; ibin++){
+      hist->SetBinContent(ibin,0);    
+      }
+    for(Int_t ibin = 1 ; ibin < hist->FindBin(min)   ; ibin++){
+      hist->SetBinContent(ibin,0);    
+      }
+      
+    hist->SetEntries((Int_t) hist->Integral());
+}
+
+Float_t cut_around_maximum(TH1F *hist, Float_t below, Float_t above) {
+  
+  Int_t binmax = hist->GetMaximumBin();
+  Double_t x = hist->GetXaxis()->GetBinCenter(binmax);
+  HistXCut(hist,x-below,x+above);
+  
+  return x;
+  
+}
+
 
 void draw_and_save(TObject *hist,TString name,TString outdir,TString draw_options) {
   
@@ -58,7 +83,7 @@ void draw_and_save(TObject *hist,TString name,TString outdir,TString draw_option
     c->Print(outdir+name+".png");
 //   }
 //   c->Print(outdir+name+".pdf");
-    c->Print(outdir+name+".svg");
+//     c->Print(outdir+name+".svg");
 }
 
 
@@ -344,16 +369,8 @@ void compare(void) {
     
     TH1F* CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_t1"));  
     
-    //  cutting ghots signals with long drift times t1 > 90 ns
-		Int_t binNumber = CentA_t1->GetNbinsX() ;
-		Float_t T1MaxCut (90);
-		for(Int_t ibin =  CentA_t1->FindBin(T1MaxCut) ; ibin < binNumber ; ibin++){
-			CentA_t1->SetBinContent(ibin,0);		
-			}
-		Float_t T1MinCut (-55);
-		for(Int_t ibin = 0 ; ibin < CentA_t1->FindBin(T1MinCut)   ; ibin++){
-			CentA_t1->SetBinContent(ibin,0);		
-			}
+    HistXCut(CentA_t1,-50,90);
+    cut_around_maximum(CentA_t1,10,10);
     
     TH1F* CentA_tot = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_tot"));  
 //     CentA_t1->Rebin(4);
@@ -369,8 +386,8 @@ void compare(void) {
       t1 = intersect;
     }
     Double_t t1_mean = CentA_t1->GetMean();
-    Double_t counts = CentA_t1->GetEntries();
-    Double_t ref_counts = RefChan_t1->GetEntries();
+    Double_t counts = CentA_t1->Integral();
+    Double_t ref_counts = RefChan_t1->Integral();
     Double_t t1_std  = CentA_t1->GetStdDev();
     Double_t tot_mean = CentA_tot->GetMean();
     Double_t tot_std  = CentA_tot->GetStdDev();
@@ -407,6 +424,10 @@ void compare(void) {
     } else {
       graph_x = ylist[i].Atoi();
     }
+    
+    TString graph_x_str;
+    graph_x_str.Form("%06.2f",graph_x);
+    draw_and_save(CentA_t1,"CentA_t1"+graph_x_str,outdir,"");
     
     Double_t intensity = intensitylist[i].Atof();
 //     cout << "intensity" << intensitylist[i] << endl;
@@ -542,6 +563,7 @@ void compare(void) {
   tg_intensity->SetMarkerStyle(21);
   draw_and_save(tg_intensity,"tg_intensity",outdir,"AP");
   tg_intensity->GetYaxis()->SetRangeUser(0.0,30.0);
+  
   
   
   
