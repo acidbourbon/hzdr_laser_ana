@@ -5,11 +5,11 @@
 
 
 
-Bool_t file_exists(TString fname){
-  
-  fstream src_file(fname.Data());
-  return src_file.good();
-}
+// Bool_t file_exists(TString fname){
+//   
+//   fstream src_file(fname.Data());
+//   return src_file.good();
+// }
 
 std::vector<TString> file_to_str_array(TString fname) {
   
@@ -357,10 +357,10 @@ void compare(void) {
     
     
     cout << "opening file: "<< fname <<endl; 
-    if (not(file_exists(fname))){
-      cout << fname << " does not exist" << endl;
-      continue;
-    }
+//     if (not(file_exists(fname))){
+//       cout << fname << " does not exist" << endl;
+//       continue;
+//     }
     
     
     TFile *f = new TFile(fname);
