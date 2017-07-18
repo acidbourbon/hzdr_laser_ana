@@ -1,5 +1,6 @@
 // this is the compare.C for the 
 
+#define REFCHAN "08"
 #define use_intersect false // use fit+ intersect methond, else use 50% of cumulant
 
 #define t1_min -100
@@ -9,11 +10,11 @@
 #define t1_max 200
 
 
-Bool_t file_exists(TString fname){
-  
-  fstream src_file(fname.Data());
-  return src_file.good();
-}
+// Bool_t file_exists(TString fname){
+//   
+//   fstream src_file(fname.Data());
+//   return src_file.good();
+// }
 
 std::vector<TString> file_to_str_array(TString fname) {
   
