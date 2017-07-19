@@ -242,6 +242,12 @@ void compare(void) {
   tg_ChX_tot_means->GetXaxis()->SetTitle("y-pos (um)");
   tg_ChX_tot_means->GetYaxis()->SetTitle("tot (ns)");
   
+  TGraphErrors *tg_ChX_tot_untrig_means = new TGraphErrors();
+  tg_ChX_tot_untrig_means->SetTitle("tot untrig Ch"+chan+" means");
+  tg_ChX_tot_untrig_means->SetName("tg_Ch"+chan+"_tot_untrig_means");
+  tg_ChX_tot_untrig_means->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_tot_untrig_means->GetYaxis()->SetTitle("tot (ns)");
+  
   TGraph *tg_ChX_t1_std = new TGraph();
   tg_ChX_t1_std->SetTitle("t1 Ch"+chan+" StdDevs");
   tg_ChX_t1_std->SetName("tg_ChX_t1_std");
@@ -271,6 +277,7 @@ void compare(void) {
     tg_ChX_t1_std->GetXaxis()->SetTitle("x-pos (um)");
     tg_ChX_t1_means->GetXaxis()->SetTitle("x-pos (um)");
     tg_ChX_tot_means->GetXaxis()->SetTitle("x-pos (um)");
+    tg_ChX_tot_untrig_means->GetXaxis()->SetTitle("x-pos (um)");
     tg_ChX_counts->GetXaxis()->SetTitle("x-pos (um)");
     tg_ChX_t1_gauss->GetXaxis()->SetTitle("x-pos (um)");
     tg_intensity->GetXaxis()->SetTitle("x-pos (um)");
@@ -281,6 +288,7 @@ void compare(void) {
     tg_ChX_t1_std->GetXaxis()->SetTitle("z-pos (um)");
     tg_ChX_t1_means->GetXaxis()->SetTitle("z-pos (um)");
     tg_ChX_tot_means->GetXaxis()->SetTitle("z-pos (um)");
+    tg_ChX_tot_untrig_means->GetXaxis()->SetTitle("z-pos (um)");
     tg_ChX_counts->GetXaxis()->SetTitle("z-pos (um)");
     tg_ChX_t1_gauss->GetXaxis()->SetTitle("z-pos (um)");
     tg_intensity->GetXaxis()->SetTitle("z-pos (um)");
@@ -291,6 +299,7 @@ void compare(void) {
     tg_ChX_t1_std->GetXaxis()->SetTitle("threshold (LSB)");
     tg_ChX_t1_means->GetXaxis()->SetTitle("threshold (LSB)");
     tg_ChX_tot_means->GetXaxis()->SetTitle("threshold (LSB)");
+    tg_ChX_tot_untrig_means->GetXaxis()->SetTitle("threshold (LSB)");
     tg_ChX_counts->GetXaxis()->SetTitle("threshold (LSB)");
     tg_ChX_t1_gauss->GetXaxis()->SetTitle("threshold (LSB)");
     tg_intensity->GetXaxis()->SetTitle("threshold (LSB)");
@@ -374,6 +383,7 @@ void compare(void) {
     
     TH1F* CentA_tot = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_tot"));  
 //     CentA_t1->Rebin(4);
+    TH1F* CentA_tot_untrig = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_tot_untrig"));  
     TH1F* RefChan_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+REFCHAN+"_t1"));  
     
     
@@ -391,6 +401,8 @@ void compare(void) {
     Double_t t1_std  = CentA_t1->GetStdDev();
     Double_t tot_mean = CentA_tot->GetMean();
     Double_t tot_std  = CentA_tot->GetStdDev();
+    Double_t tot_untrig_mean = CentA_tot_untrig->GetMean();
+    Double_t tot_untrig_std  = CentA_tot_untrig->GetStdDev();
     
     Double_t efficiency = 0;
     if (ref_counts > 0) {
@@ -427,7 +439,7 @@ void compare(void) {
     
     TString graph_x_str;
     graph_x_str.Form("%06.2f",graph_x);
-    draw_and_save(CentA_t1,"CentA_t1"+graph_x_str,outdir,"");
+//     draw_and_save(CentA_t1,"CentA_t1"+graph_x_str,outdir,"");
     
     Double_t intensity = intensitylist[i].Atof();
 //     cout << "intensity" << intensitylist[i] << endl;
@@ -440,6 +452,8 @@ void compare(void) {
         tg_ChX_t1_means->SetPointError (point_no, 0, t1_std);
         tg_ChX_tot_means->SetPoint(point_no,graph_x,tot_mean);
         tg_ChX_tot_means->SetPointError (point_no, 0, tot_std);
+        tg_ChX_tot_untrig_means->SetPoint(point_no,graph_x,tot_untrig_mean);
+        tg_ChX_tot_untrig_means->SetPointError (point_no, 0, tot_untrig_std);
         tg_ChX_t1_std->SetPoint(point_no, graph_x, t1_std);
         
         tg_ChX_counts->SetPoint(point_no,graph_x,counts);
@@ -513,6 +527,8 @@ void compare(void) {
 //  tg_ChX_t1->SetMarkerSize(13);
 //  tg_ChX_t1->SetMarkerColor(1);
 //  tg_ChX_t1->SetMarkerStyle(21+i);
+
+/*
   
   tg_ChX_t1->SetLineColor(2);
   tg_ChX_t1->SetLineWidth(4);
@@ -533,12 +549,23 @@ void compare(void) {
   tg_ChX_t1_gauss->SetMarkerStyle(21);
   draw_and_save(tg_ChX_t1_gauss,"tg_Ch"+chan+"_t1_gauss",outdir,"AP");
   
+  
+  */
+  
   tg_ChX_tot_means->SetLineColor(2);
   tg_ChX_tot_means->SetLineWidth(4);
   tg_ChX_tot_means->SetMarkerColor(4);
   tg_ChX_tot_means->SetMarkerStyle(21);
   draw_and_save(tg_ChX_tot_means,"tg_Ch"+chan+"_tot_means",outdir,"AP");
   
+  tg_ChX_tot_untrig_means->SetLineColor(2);
+  tg_ChX_tot_untrig_means->SetLineWidth(4);
+  tg_ChX_tot_untrig_means->SetMarkerColor(4);
+  tg_ChX_tot_untrig_means->SetMarkerStyle(21);
+  draw_and_save(tg_ChX_tot_untrig_means,"tg_Ch"+chan+"_tot_untrig_means",outdir,"AP");
+  
+  
+  /*
   tg_ChX_t1_std->SetLineColor(2);
   tg_ChX_t1_std->SetLineWidth(4);
   tg_ChX_t1_std->SetMarkerColor(4);
@@ -564,7 +591,7 @@ void compare(void) {
   draw_and_save(tg_intensity,"tg_intensity",outdir,"AP");
   tg_intensity->GetYaxis()->SetRangeUser(0.0,30.0);
   
-  
+  */
   
   
   TSeqCollection * canvases = gROOT->GetListOfCanvases();
