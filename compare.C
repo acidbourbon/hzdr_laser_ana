@@ -354,7 +354,7 @@ void compare(void) {
 //   leg->AddEntry("f1","Function abs(#frac{sin(x)}{x})","l");
 //   leg->AddEntry("gr","Graph with error bars","lep");
   
-  
+  Int_t point_no = 0;
   for (Int_t i = 0; i< list.size(); i++){
     
     
@@ -446,7 +446,7 @@ void compare(void) {
 //     Double_t intensity = i;
     cout << "test" << endl;
     if( true) { // select only points in the anode plane
-        static Int_t point_no = 0;
+       
         tg_ChX_t1->SetPoint(point_no,graph_x,t1);
         tg_ChX_t1_means->SetPoint(point_no,graph_x,t1_mean);
         tg_ChX_t1_means->SetPointError (point_no, 0, t1_std);
