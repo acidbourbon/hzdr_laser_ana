@@ -185,14 +185,24 @@ void compare_vol(void) {
   tg_ChX_t1->GetZaxis()->SetTitleOffset(1.4);
   
   TGraph2D *tg_ChX_t1_unpolar = new TGraph2D();
-  tg_ChX_t1_unpolar->SetTitle("t1 Ch"+chan+"_unpolar");
-  tg_ChX_t1_unpolar->SetName("tg_Ch"+chan+"_t1 unpolar");
+  tg_ChX_t1_unpolar->SetTitle("t1 Ch"+chan+"_t1_unpolar");
+  tg_ChX_t1_unpolar->SetName("tg_Ch"+chan+"_t1_unpolar");
   tg_ChX_t1_unpolar->GetXaxis()->SetTitle("Phi");
   tg_ChX_t1_unpolar->GetXaxis()->SetTitleOffset(2.4);
   tg_ChX_t1_unpolar->GetYaxis()->SetTitle("radius (um)");
   tg_ChX_t1_unpolar->GetYaxis()->SetTitleOffset(2.4);
   tg_ChX_t1_unpolar->GetZaxis()->SetTitle("t1 (ns)");
   tg_ChX_t1_unpolar->GetZaxis()->SetTitleOffset(1.4);
+  
+#define interpol_phisteps 72+1 // 5 degree steps
+#define interpol_radsteps 100
+#define interpol_max_rad  4000
+#define interpol_max_y 3000
+#define interpol_min_y -3000
+#define interpol_max_z 2500
+#define interpol_min_z -2500
+  
+  TH2F* t1_unpolar_interpol = new TH2F("t1_unpolar_interpol","t1_unpolar_interpol",interpol_phisteps,0,2*TMath::Pi(),interpol_radsteps,0,interpol_max_rad);
   
   
   TGraph2DErrors *tg_ChX_t1_means = new TGraph2DErrors();
@@ -544,6 +554,22 @@ void compare_vol(void) {
 //  tg_ChX_t1->SetMarkerSize(13);
 //  tg_ChX_t1->SetMarkerColor(1);
 //  tg_ChX_t1->SetMarkerStyle(21+i);
+//                                      _ _           _             
+//                          ___        | (_)         | |            
+//   ___  __ ___   _____   ( _ )     __| |_ ___ _ __ | | __ _ _   _ 
+//  / __|/ _` \ \ / / _ \  / _ \/\  / _` | / __| '_ \| |/ _` | | | |
+//  \__ \ (_| |\ V /  __/ | (_>  < | (_| | \__ \ |_) | | (_| | |_| |
+//  |___/\__,_| \_/ \___|  \___/\/  \__,_|_|___/ .__/|_|\__,_|\__, |
+//                                             | |             __/ |
+//                                             |_|            |___/ 
+//       _          __  __                                          
+//      | |        / _|/ _|                                         
+//   ___| |_ _   _| |_| |_                                          
+//  / __| __| | | |  _|  _|                                         
+//  \__ \ |_| |_| | | | |                                           
+//  |___/\__|\__,_|_| |_|                                           
+//                                                                  
+//                                                                  
   
   tg_ChX_t1->SetLineColor(2);
   tg_ChX_t1->SetLineWidth(1);
@@ -588,43 +614,66 @@ void compare_vol(void) {
   tg_ChX_t1_std->SetMarkerStyle(21);
   draw_and_save(tg_ChX_t1_std,"tg_Ch"+chan+"_t1_std",outdir,"tri1 pcol");
   
-
-//                                      _ _           _             
-//                          ___        | (_)         | |            
-//   ___  __ ___   _____   ( _ )     __| |_ ___ _ __ | | __ _ _   _ 
-//  / __|/ _` \ \ / / _ \  / _ \/\  / _` | / __| '_ \| |/ _` | | | |
-//  \__ \ (_| |\ V /  __/ | (_>  < | (_| | \__ \ |_) | | (_| | |_| |
-//  |___/\__,_| \_/ \___|  \___/\/  \__,_|_|___/ .__/|_|\__,_|\__, |
-//                                             | |             __/ |
-//                                             |_|            |___/ 
-//       _          __  __                                          
-//      | |        / _|/ _|                                         
-//   ___| |_ _   _| |_| |_                                          
-//  / __| __| | | |  _|  _|                                         
-//  \__ \ |_| |_| | | | |                                           
-//  |___/\__|\__,_|_| |_|                                           
-//                                                                  
-//                                                                  
-  
-//   dummy->GetXaxis()->SetRangeUser(0,5);
-//   dummy->GetYaxis()->SetRangeUser(0,5);
-//   dummy->GetZaxis()->SetRangeUser(0,500);
   
   
-//   TCanvas *c01 = new TCanvas("c_1","c_1",200,10,600,400);
-//   tot0->SetMarkerStyle(20);
-//   (new TH3F("name","Time Over Threshold",10,0,5e-12,10,0,120,10,0,500))->Draw();
-// //   dummy->Draw();
-// //   tot0->Draw("same,pcol");
-//   tot0->Draw("tri1");
-//   
-//   
-//   
-//   
-//   TCanvas *c02 = new TCanvas("c_2","c_2",200,10,600,400);
-// //   tot_rms0->SetMarkerStyle(20);
-// //   dummy->GetZaxis()->SetRangeUser(0,100);
-// //   dummy->Draw();
+  
+//   _       _                        _       _       
+//  (_)     | |                      | |     | |      
+//   _ _ __ | |_ ___ _ __ _ __   ___ | | __ _| |_ ___ 
+//  | | '_ \| __/ _ \ '__| '_ \ / _ \| |/ _` | __/ _ \
+//  | | | | | ||  __/ |  | |_) | (_) | | (_| | ||  __/
+//  |_|_| |_|\__\___|_|  | .__/ \___/|_|\__,_|\__\___|
+//                       | |                          
+//                       |_|                          
+//   _____ _____                 _      _____ ______  
+//  |_   _|  __ \               | |    / __  \|  _  \ 
+//    | | | |  \/_ __ __ _ _ __ | |__  `' / /'| | | | 
+//    | | | | __| '__/ _` | '_ \| '_ \   / /  | | | | 
+//    | | | |_\ \ | | (_| | |_) | | | |./ /___| |/ /  
+//    \_/  \____/_|  \__,_| .__/|_| |_|\_____/|___/   
+//                        | |                         
+//                        |_|                         
+//   _          _____ _   _  _____ ______             
+//  | |        |_   _| | | |/ __  \|  ___|            
+//  | |_ ___     | | | |_| |`' / /'| |_               
+//  | __/ _ \    | | |  _  |  / /  |  _|              
+//  | || (_) |   | | | | | |./ /___| |                
+//   \__\___/    \_/ \_| |_/\_____/\_|                
+//                                                    
+//                                               
+  
+  
+  
+  
+  for (Int_t phibin = 1; phibin < interpol_phisteps+1; phibin++){
+    for (Int_t rbin = 1; rbin < interpol_radsteps+1; rbin++){
+      Double_t my_phi = t1_unpolar_interpol->GetXaxis()->GetBinCenter(phibin);
+      Double_t my_r = t1_unpolar_interpol->GetYaxis()->GetBinCenter(rbin);
+      
+      Double_t interpol_t1 = -30;
+      
+      Double_t my_y = my_r * TMath::Cos(my_phi);
+      Double_t my_z = my_r * TMath::Sin(my_phi);
+      if(my_y <= interpol_max_y && my_y >= interpol_min_y){
+        if(my_z <= interpol_max_z && my_z >= interpol_min_z){
+          interpol_t1 = tg_ChX_t1_unpolar->Interpolate(my_phi,my_r);
+        }
+      }
+      
+      t1_unpolar_interpol->SetBinContent(phibin,rbin,interpol_t1);
+      
+    }
+  }
+  
+  draw_and_save(t1_unpolar_interpol,"t1_unpolar_interpol",outdir,"lego2");
+  
+  
+  
+  
+  
+  
+  
+  
 // //   (new TH3F("name2","ToT RMS (jitter)",10,0,5e-12,10,0,120,10,0,0.5))->Draw();
 // //   tot_rms0->Draw("same,pcol");
 //   tot_rms0->Draw("tri1");
@@ -650,6 +699,7 @@ void compare_vol(void) {
   tg_ChX_t1_means->Write();
   tg_ChX_t1_std->Write();
   tg_ChX_tot_means->Write();
+  t1_unpolar_interpol->Write();
   
   
   f_out->Write();
