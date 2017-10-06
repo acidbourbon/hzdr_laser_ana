@@ -165,6 +165,12 @@ void compare_vol(void) {
   TString scan_z=from_env("scan_z","false");
   TString scan_thr=from_env("scan_thr","false");
   
+  TString pol_cent_x_str=from_env("pol_cent_x","4000");
+  TString pol_cent_y_str=from_env("pol_cent_y","4000");
+  TString pol_cent_z_str=from_env("pol_cent_z","4000");
+  Double_t pol_cent_x = pol_cent_x_str.Atof();
+  Double_t pol_cent_y = pol_cent_y_str.Atof();
+  Double_t pol_cent_z = pol_cent_z_str.Atof();
 
   
   
@@ -177,6 +183,16 @@ void compare_vol(void) {
   tg_ChX_t1->GetYaxis()->SetTitleOffset(2.4);
   tg_ChX_t1->GetZaxis()->SetTitle("t1 (ns)");
   tg_ChX_t1->GetZaxis()->SetTitleOffset(1.4);
+  
+  TGraph2D *tg_ChX_t1_unpolar = new TGraph2D();
+  tg_ChX_t1_unpolar->SetTitle("t1 Ch"+chan+" unpolar");
+  tg_ChX_t1_unpolar->SetName("tg_Ch"+chan+"_t1 unpolar");
+  tg_ChX_t1_unpolar->GetXaxis()->SetTitle("Phi");
+  tg_ChX_t1_unpolar->GetXaxis()->SetTitleOffset(2.4);
+  tg_ChX_t1_unpolar->GetYaxis()->SetTitle("radius (um)");
+  tg_ChX_t1_unpolar->GetYaxis()->SetTitleOffset(2.4);
+  tg_ChX_t1_unpolar->GetZaxis()->SetTitle("t1 (ns)");
+  tg_ChX_t1_unpolar->GetZaxis()->SetTitleOffset(1.4);
   
   
   TGraph2DErrors *tg_ChX_t1_means = new TGraph2DErrors();
@@ -237,6 +253,48 @@ void compare_vol(void) {
   tg_intensity->GetZaxis()->SetTitle("intensity (nJ)");  
   
   TFile *f_out = new TFile(outdir+"/compare.root","RECREATE");
+  
+  
+  
+  TH1F* radiae = new TH1F(
+  "radiae","radiae;distance to center (µm);measured points",
+                                     2000,0,4000);  
+  
+  
+  
+  
+  TTree* scan_data_tree = new TTree("scan_data_tree", "scan_data");
+  
+  Double_t t1;   
+  Double_t t1_mean;   
+  Double_t counts;    
+  Double_t ref_counts;
+  Double_t efficiency;
+  Double_t t1_std;    
+  Double_t tot_mean;  
+  Double_t tot_std;  
+  Double_t xpos;
+  Double_t ypos;
+  Double_t zpos;
+  Double_t radius;
+  Double_t phi;
+  
+  scan_data_tree->Branch("t1",&t1);
+  scan_data_tree->Branch("t1_mean",&t1_mean);
+  scan_data_tree->Branch("counts",&counts);
+  scan_data_tree->Branch("ref_counts",&ref_counts);
+  scan_data_tree->Branch("t1_std",&t1_std);
+  scan_data_tree->Branch("tot_means",&tot_mean);
+  scan_data_tree->Branch("tot_std",&tot_std);
+  scan_data_tree->Branch("xpos",&xpos);
+  scan_data_tree->Branch("ypos",&ypos);
+  scan_data_tree->Branch("zpos",&zpos);
+  scan_data_tree->Branch("efficiency",&efficiency);
+  scan_data_tree->Branch("radius",&radius);
+  scan_data_tree->Branch("phi",&phi);
+  
+  
+  
   
   
 //   _                                          
@@ -328,18 +386,18 @@ void compare_vol(void) {
     get_toa_offset(CentA_t1, &intersect, &midpoint);
 	CentA_t1->DrawCopy("hist e");
 	CentA_t1->SaveAs("www.png");
-    Float_t t1 = midpoint;
+    t1 = midpoint;
     if(use_intersect) {
       t1 = intersect;
     }
-    Double_t t1_mean = CentA_t1->GetMean();
-    Double_t counts = CentA_t1->GetEntries();
-    Double_t ref_counts = RefChan_t1->GetEntries();
-    Double_t t1_std  = CentA_t1->GetStdDev();
-    Double_t tot_mean = CentA_tot->GetMean();
-    Double_t tot_std  = CentA_tot->GetStdDev();
+     t1_mean = CentA_t1->GetMean();
+     counts = CentA_t1->GetEntries();
+     ref_counts = RefChan_t1->GetEntries();
+     t1_std  = CentA_t1->GetStdDev();
+     tot_mean = CentA_tot->GetMean();
+     tot_std  = CentA_tot->GetStdDev();
     
-    Double_t efficiency = 0;
+     efficiency = 0;
     if (ref_counts > 0) {
       efficiency = counts/ref_counts;
     }
@@ -351,6 +409,10 @@ void compare_vol(void) {
     cout << "x pos: " << xlist[i] << endl;
     cout << "y pos: " << ylist[i] << endl;
     cout << "z pos: " << zlist[i] << endl;
+    
+    xpos= xlist[i].Atof();
+    ypos= ylist[i].Atof();
+    zpos= zlist[i].Atof();
 
 //     if( t1 > 100 || t1 < -100) {
 //         t1 = -100;
@@ -368,6 +430,30 @@ void compare_vol(void) {
     Double_t graph_y = zlist[i].Atoi();
 //     cout << "z: " << graph_y << endl;
     
+    radius = TMath::Sqrt(TMath::Power(pol_cent_y-ypos,2) +  TMath::Power(pol_cent_z-zpos,2));
+    
+    Double_t polar_y = ypos- pol_cent_y;
+    Double_t polar_z = zpos- pol_cent_z;
+    
+    phi = -1;
+    
+    Double_t pi = TMath::Pi();
+    
+    if (polar_y >= 0 && polar_z >= 0) {
+      phi = TMath::ATan( polar_z/polar_y);
+    } else if ( polar_y < 0 && polar_z >= 0) {
+      phi = TMath::ATan( (-polar_y)/polar_z) + pi / 2.0;
+    } else if ( polar_y < 0 && polar_z < 0) {
+      phi = TMath::ATan( polar_z/polar_y) + pi;
+    } else if ( polar_y >= 0 && polar_z < 0) {
+      phi = TMath::ATan( polar_y/(-polar_z)) + pi * 3.0/2.0;
+    }
+    
+    
+    radiae->Fill(radius);
+    
+    scan_data_tree->Fill();
+    
     if( t1 < t1_max && t1 > t1_min) {
 //     if( xlist[i].Atoi() == 3900 ) {
 //     if( xlist[i].Atoi() == 3400 || false) {
@@ -378,6 +464,7 @@ void compare_vol(void) {
 
 
         tg_ChX_t1->SetPoint(point_no,graph_x,graph_y,t1);
+        tg_ChX_t1_unpolar->SetPoint(point_no,phi,radius,t1);
         tg_ChX_t1_means->SetPoint(point_no,graph_x,graph_y,t1_mean);
         tg_ChX_t1_means->SetPointError (point_no, 0, 0 ,t1_std);
         tg_ChX_tot_means->SetPoint(point_no,graph_x,graph_y,tot_mean);
@@ -465,6 +552,18 @@ void compare_vol(void) {
 	  tg_ChX_t1->GetZaxis()->SetTitle("t1 [ns]");
 	  tg_ChX_t1->GetZaxis()->SetTitleOffset(1.4);
 //   tg_ChX_t1->Draw("AP");
+      
+  tg_ChX_t1_unpolar->SetLineColor(2);
+  tg_ChX_t1_unpolar->SetLineWidth(1);
+  tg_ChX_t1_unpolar->SetMarkerColor(kBlack);
+  tg_ChX_t1_unpolar->SetMarkerStyle(6);
+  draw_and_save(tg_ChX_t1_unpolar,"tg_Ch"+chan+"_t1_unpolar",outdir,"tri1 pcol");
+  tg_ChX_t1_unpolar->GetXaxis()->SetTitle("phi");
+  tg_ChX_t1_unpolar->GetXaxis()->SetTitleOffset(2.4);
+  tg_ChX_t1_unpolar->GetYaxis()->SetTitle("radius [#mum]");
+  tg_ChX_t1_unpolar->GetYaxis()->SetTitleOffset(2.4);
+  tg_ChX_t1_unpolar->GetZaxis()->SetTitle("t1 [ns]");
+  tg_ChX_t1_unpolar->GetZaxis()->SetTitleOffset(1.4);
   
   tg_ChX_t1_means->SetLineColor(2);
   tg_ChX_t1_means->SetLineWidth(4);
