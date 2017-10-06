@@ -1,2 +1,3 @@
 TDC=1483 chan=05 ./compare_vol.sh ../data/yz_vol_scan_ASD8_14/
 TDC=1482 chan=05 ./compare_vol.sh ../data/yz_vol_scan_PASTTREC ...
+TDC=1483 chan=05 pol_cent_x=4100 pol_cent_y=4025 pol_cent_z=3100 ./compare_vol.sh ../data/yz_vol_scan_ASD8_41/

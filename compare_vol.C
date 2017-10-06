@@ -185,7 +185,7 @@ void compare_vol(void) {
   tg_ChX_t1->GetZaxis()->SetTitleOffset(1.4);
   
   TGraph2D *tg_ChX_t1_unpolar = new TGraph2D();
-  tg_ChX_t1_unpolar->SetTitle("t1 Ch"+chan+" unpolar");
+  tg_ChX_t1_unpolar->SetTitle("t1 Ch"+chan+"_unpolar");
   tg_ChX_t1_unpolar->SetName("tg_Ch"+chan+"_t1 unpolar");
   tg_ChX_t1_unpolar->GetXaxis()->SetTitle("Phi");
   tg_ChX_t1_unpolar->GetXaxis()->SetTitleOffset(2.4);
@@ -340,6 +340,7 @@ void compare_vol(void) {
 //   leg->AddEntry("gr","Graph with error bars","lep");
   
   Int_t point_no = 0;
+  Int_t unpolar_point_no = 0;
   
   for (Int_t i = 0; i< list.size(); i++){
     
@@ -464,7 +465,11 @@ void compare_vol(void) {
 
 
         tg_ChX_t1->SetPoint(point_no,graph_x,graph_y,t1);
-        tg_ChX_t1_unpolar->SetPoint(point_no,phi,radius,t1);
+        tg_ChX_t1_unpolar->SetPoint(unpolar_point_no++,phi,radius,t1);
+        if(phi>-0.01 && phi<0.01){ // phi is almost 0, duplicate points at 2 pi
+          tg_ChX_t1_unpolar->SetPoint(unpolar_point_no++,2*pi,radius,t1);
+        }
+        tg_ChX_t1_unpolar->SetPoint(unpolar_point_no++,phi,radius,t1);
         tg_ChX_t1_means->SetPoint(point_no,graph_x,graph_y,t1_mean);
         tg_ChX_t1_means->SetPointError (point_no, 0, 0 ,t1_std);
         tg_ChX_tot_means->SetPoint(point_no,graph_x,graph_y,tot_mean);
@@ -641,6 +646,7 @@ void compare_vol(void) {
   
   f_out->cd();
   tg_ChX_t1->Write();
+  tg_ChX_t1_unpolar->Write();
   tg_ChX_t1_means->Write();
   tg_ChX_t1_std->Write();
   tg_ChX_tot_means->Write();
