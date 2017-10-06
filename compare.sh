@@ -21,4 +21,4 @@ for i in $(find $scan_dir -name "laser_intensity.txt" | sort); do
 echo $(cat $i) | sed 's/,/./' >> intensity_list.txt
 done
 
-root -l 'compare.C()' 
+root -l 'compare.C()' $2 ## can add -q via #2

@@ -2,6 +2,10 @@
 
 #define use_intersect false // use fit+ intersect methond, else use 50% of cumulant
 #define REFCHAN "08"
+#define DRAW_ALL_T1 false
+
+#include <iostream>
+#include <fstream>
 
 
 
@@ -179,7 +183,9 @@ void get_toa_offset(TH1F* toa0, Float_t* intersect, Float_t* midpoint) {
 void compare(void) {
     Int_t color_contrast_array[200]={kBlack,kRed,kBlue,kGreen+1,kOrange,kMagenta,kYellow+1,kViolet,kOrange+7,kRed+1,kRed+2,kRed-6,kOrange-3,kMagenta+1,kMagenta+2,kMagenta-9,kBlue+2,kBlue-7,kGreen+2,kGreen-6,kYellow+2,kGray,kGray+1, kGray+2};
   
-
+    
+    
+    
   
 //      _       __ _                                   
 //     | |     / _(_)                                  
@@ -214,6 +220,26 @@ void compare(void) {
   TString scan_z=from_env("scan_z","false");
   TString scan_thr=from_env("scan_thr","false");
   
+  
+  
+  ofstream graph_x_txt (outdir+"/graph_x.txt");
+  ofstream t1_mean_txt (outdir+"/t1_mean.txt");
+  ofstream t1_txt (outdir+"/t1.txt");
+  ofstream t1_std_txt (outdir+"/t1_std.txt");
+  ofstream tot_mean_txt (outdir+"/tot_mean.txt");
+  ofstream tot_std_txt (outdir+"/tot_std.txt");
+  ofstream tot_untrig_mean_txt (outdir+"/tot_untrig_mean.txt");
+  ofstream tot_untrig_std_txt (outdir+"/tot_untrig_std.txt");
+//   if (myfile.is_open())
+//   {
+//     myfile << "This is a line.\n";
+//     myfile << "This is another line.\n";
+//     for(int count = 0; count < size; count ++){
+//         myfile << x[count] << " " ;
+//     }
+//     myfile.close();
+//   }
+//   
 
   
   TGraph *tg_ChX_t1 = new TGraph();
@@ -377,9 +403,10 @@ void compare(void) {
     f->cd();
     
     TH1F* CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_t1"));  
+    TH2F* CentA_potato = ((TH2F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_potato"));  
     
-    HistXCut(CentA_t1,-50,90);
-    cut_around_maximum(CentA_t1,10,10);
+    //HistXCut(CentA_t1,-50,90);
+    //cut_around_maximum(CentA_t1,10,10);
     
     TH1F* CentA_tot = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_tot"));  
 //     CentA_t1->Rebin(4);
@@ -439,7 +466,7 @@ void compare(void) {
     
     TString graph_x_str;
     graph_x_str.Form("%06.2f",graph_x);
-//     draw_and_save(CentA_t1,"CentA_t1"+graph_x_str,outdir,"");
+    if(DRAW_ALL_T1){ draw_and_save(CentA_t1,"CentA_t1"+graph_x_str,outdir,""); }
     
     Double_t intensity = intensitylist[i].Atof();
 //     cout << "intensity" << intensitylist[i] << endl;
@@ -464,13 +491,34 @@ void compare(void) {
         
         tg_intensity->SetPoint(point_no,graph_x,intensity);
         
-        TH1F* hist_new = (TH1F*) CentA_t1->Clone();
+        TH1F* t1_clone = (TH1F*) CentA_t1->Clone();
+        TH2F* potato_clone = (TH2F*) CentA_potato->Clone();
+        TH1F* tot_clone = (TH1F*) CentA_tot->Clone();
+        TH1F* tot_untrig_clone = (TH1F*) CentA_tot_untrig->Clone();
         TString new_hist_name;
         new_hist_name.Form("%04.1f_t1_hist",graph_x);
-        hist_new->SetName(new_hist_name);
+        t1_clone->SetName(new_hist_name);
+        new_hist_name.Form("%04.1f_potato_hist",graph_x);
+        potato_clone->SetName(new_hist_name);
+        new_hist_name.Form("%04.1f_tot_hist",graph_x);
+        tot_clone->SetName(new_hist_name);
+        new_hist_name.Form("%04.1f_tot_untrig_hist",graph_x);
+        tot_untrig_clone->SetName(new_hist_name);
         f_out->cd();
-        hist_new->Write();
+        t1_clone->Write();
+        potato_clone->Write();
+        tot_clone->Write();
+        tot_untrig_clone->Write();
         f->cd();
+        
+        graph_x_txt << graph_x << endl;
+        t1_txt << t1 << endl;
+        t1_mean_txt << t1_mean << endl;
+        t1_std_txt << t1_std << endl;
+        tot_mean_txt << tot_mean << endl;
+        tot_std_txt << tot_std << endl;
+        tot_untrig_mean_txt << tot_untrig_mean << endl;
+        tot_untrig_std_txt << tot_untrig_std << endl;
         
         
         point_no++;
@@ -528,12 +576,14 @@ void compare(void) {
 //  tg_ChX_t1->SetMarkerColor(1);
 //  tg_ChX_t1->SetMarkerStyle(21+i);
 
-/*
+
   
   tg_ChX_t1->SetLineColor(2);
   tg_ChX_t1->SetLineWidth(4);
   tg_ChX_t1->SetMarkerColor(4);
   tg_ChX_t1->SetMarkerStyle(21);
+  tg_ChX_t1->GetYaxis()->SetRangeUser(-10,20);
+  if(TDC == "1483") tg_ChX_t1->GetYaxis()->SetRangeUser(-20,-5);
   draw_and_save(tg_ChX_t1,"tg_Ch"+chan+"_t1",outdir,"AP");
 //   tg_ChX_t1->Draw("AP");
   
@@ -541,6 +591,8 @@ void compare(void) {
   tg_ChX_t1_means->SetLineWidth(4);
   tg_ChX_t1_means->SetMarkerColor(4);
   tg_ChX_t1_means->SetMarkerStyle(21);
+  tg_ChX_t1_means->GetYaxis()->SetRangeUser(-10,20);
+  if(TDC == "1483") tg_ChX_t1_means->GetYaxis()->SetRangeUser(-20,-5);
   draw_and_save(tg_ChX_t1_means,"tg_Ch"+chan+"_t1_means",outdir,"AP");
   
   tg_ChX_t1_gauss->SetLineColor(2);
@@ -550,26 +602,32 @@ void compare(void) {
   draw_and_save(tg_ChX_t1_gauss,"tg_Ch"+chan+"_t1_gauss",outdir,"AP");
   
   
-  */
+
   
   tg_ChX_tot_means->SetLineColor(2);
   tg_ChX_tot_means->SetLineWidth(4);
   tg_ChX_tot_means->SetMarkerColor(4);
   tg_ChX_tot_means->SetMarkerStyle(21);
+  tg_ChX_tot_means->GetYaxis()->SetRangeUser(0,600);
+  if(TDC == "1483") tg_ChX_tot_means->GetYaxis()->SetRangeUser(0,200);
   draw_and_save(tg_ChX_tot_means,"tg_Ch"+chan+"_tot_means",outdir,"AP");
   
   tg_ChX_tot_untrig_means->SetLineColor(2);
   tg_ChX_tot_untrig_means->SetLineWidth(4);
   tg_ChX_tot_untrig_means->SetMarkerColor(4);
   tg_ChX_tot_untrig_means->SetMarkerStyle(21);
+  tg_ChX_tot_untrig_means->GetYaxis()->SetRangeUser(0,600);
+  if(TDC == "1483") tg_ChX_tot_untrig_means->GetYaxis()->SetRangeUser(0,200);
   draw_and_save(tg_ChX_tot_untrig_means,"tg_Ch"+chan+"_tot_untrig_means",outdir,"AP");
   
   
-  /*
+  
   tg_ChX_t1_std->SetLineColor(2);
   tg_ChX_t1_std->SetLineWidth(4);
   tg_ChX_t1_std->SetMarkerColor(4);
   tg_ChX_t1_std->SetMarkerStyle(21);
+  tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,4);
+  if(TDC == "1483") tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,6);
   draw_and_save(tg_ChX_t1_std,"tg_Ch"+chan+"_t1_std",outdir,"AP");
   
   tg_ChX_counts->SetLineColor(2);
@@ -582,6 +640,7 @@ void compare(void) {
   tg_ChX_efficiency->SetLineWidth(4);
   tg_ChX_efficiency->SetMarkerColor(4);
   tg_ChX_efficiency->SetMarkerStyle(21);
+  tg_ChX_efficiency->GetYaxis()->SetRangeUser(-0.1,1.1);
   draw_and_save(tg_ChX_efficiency,"tg_Ch"+chan+"_efficiency",outdir,"AP");
   
   tg_intensity->SetLineColor(2);
@@ -591,7 +650,7 @@ void compare(void) {
   draw_and_save(tg_intensity,"tg_intensity",outdir,"AP");
   tg_intensity->GetYaxis()->SetRangeUser(0.0,30.0);
   
-  */
+  
   
   
   TSeqCollection * canvases = gROOT->GetListOfCanvases();
