@@ -245,80 +245,80 @@ void compare(void) {
   TGraph *tg_ChX_t1 = new TGraph();
   tg_ChX_t1->SetTitle("t1 Ch"+chan);
   tg_ChX_t1->SetName("tg_Ch"+chan+"_t1");
-  tg_ChX_t1->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_t1->GetXaxis()->SetTitle("y-pos (mm)");
   tg_ChX_t1->GetYaxis()->SetTitle("t1 (ns)");
   //tg_ChX_t1->GetZaxis()->SetTitle("ToT (ns)");
   
   TGraphErrors *tg_ChX_t1_means = new TGraphErrors();
   tg_ChX_t1_means->SetTitle("t1 Ch"+chan+" means");
   tg_ChX_t1_means->SetName("tg_Ch"+chan+"_t1_means");
-  tg_ChX_t1_means->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_t1_means->GetXaxis()->SetTitle("y-pos (mm)");
   tg_ChX_t1_means->GetYaxis()->SetTitle("t1 (ns)");
   
   TGraphErrors *tg_ChX_t1_gauss = new TGraphErrors();
   tg_ChX_t1_gauss->SetTitle("t1 Ch"+chan+" gauss");
   tg_ChX_t1_gauss->SetName("tg_Ch"+chan+"_t1_gauss");
-  tg_ChX_t1_gauss->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_t1_gauss->GetXaxis()->SetTitle("y-pos (mm)");
   tg_ChX_t1_gauss->GetYaxis()->SetTitle("t1 (ns)");
   
 
   TGraphErrors *tg_ChX_tot_means = new TGraphErrors();
   tg_ChX_tot_means->SetTitle("tot Ch"+chan+" means");
   tg_ChX_tot_means->SetName("tg_Ch"+chan+"_tot_means");
-  tg_ChX_tot_means->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_tot_means->GetXaxis()->SetTitle("y-pos (mm)");
   tg_ChX_tot_means->GetYaxis()->SetTitle("tot (ns)");
   
   TGraphErrors *tg_ChX_tot_untrig_means = new TGraphErrors();
   tg_ChX_tot_untrig_means->SetTitle("tot untrig Ch"+chan+" means");
   tg_ChX_tot_untrig_means->SetName("tg_Ch"+chan+"_tot_untrig_means");
-  tg_ChX_tot_untrig_means->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_tot_untrig_means->GetXaxis()->SetTitle("y-pos (mm)");
   tg_ChX_tot_untrig_means->GetYaxis()->SetTitle("tot (ns)");
   
   TGraph *tg_ChX_t1_std = new TGraph();
   tg_ChX_t1_std->SetTitle("t1 Ch"+chan+" StdDevs");
   tg_ChX_t1_std->SetName("tg_ChX_t1_std");
-  tg_ChX_t1_std->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_t1_std->GetXaxis()->SetTitle("y-pos (mm)");
   tg_ChX_t1_std->GetYaxis()->SetTitle("t1 StdDev (ns)");
   
   TGraph *tg_ChX_counts = new TGraph();
   tg_ChX_counts->SetTitle("Ch"+chan+" Counts");
   tg_ChX_counts->SetName("tg_ChX_counts");
-  tg_ChX_counts->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_counts->GetXaxis()->SetTitle("y-pos (mm)");
   tg_ChX_counts->GetYaxis()->SetTitle("counts");
   
   TGraph *tg_ChX_efficiency = new TGraph();
   tg_ChX_efficiency->SetTitle("Ch"+chan+" Efficiency");
   tg_ChX_efficiency->SetName("tg_ChX_efficiency");
-  tg_ChX_efficiency->GetXaxis()->SetTitle("y-pos (um)");
+  tg_ChX_efficiency->GetXaxis()->SetTitle("y-pos (mm)");
   tg_ChX_efficiency->GetYaxis()->SetTitle("efficiency");
   
   TGraph *tg_intensity = new TGraph();
   tg_intensity->SetTitle("Laser Intensity");
   tg_intensity->SetName("tg_intensity");
-  tg_intensity->GetXaxis()->SetTitle("y-pos (um)");
+  tg_intensity->GetXaxis()->SetTitle("y-pos (mm)");
   tg_intensity->GetYaxis()->SetTitle("intensity (nJ)");
   
   if( scan_x == "true") {
-    tg_ChX_t1->GetXaxis()->SetTitle("x-pos (um)");
-    tg_ChX_t1_std->GetXaxis()->SetTitle("x-pos (um)");
-    tg_ChX_t1_means->GetXaxis()->SetTitle("x-pos (um)");
-    tg_ChX_tot_means->GetXaxis()->SetTitle("x-pos (um)");
-    tg_ChX_tot_untrig_means->GetXaxis()->SetTitle("x-pos (um)");
-    tg_ChX_counts->GetXaxis()->SetTitle("x-pos (um)");
-    tg_ChX_t1_gauss->GetXaxis()->SetTitle("x-pos (um)");
-    tg_intensity->GetXaxis()->SetTitle("x-pos (um)");
-    tg_ChX_efficiency->GetXaxis()->SetTitle("x-pos (um)");
+    tg_ChX_t1->GetXaxis()->SetTitle("x-pos (mm)");
+    tg_ChX_t1_std->GetXaxis()->SetTitle("x-pos (mm)");
+    tg_ChX_t1_means->GetXaxis()->SetTitle("x-pos (mm)");
+    tg_ChX_tot_means->GetXaxis()->SetTitle("x-pos (mm)");
+    tg_ChX_tot_untrig_means->GetXaxis()->SetTitle("x-pos (mm)");
+    tg_ChX_counts->GetXaxis()->SetTitle("x-pos (mm)");
+    tg_ChX_t1_gauss->GetXaxis()->SetTitle("x-pos (mm)");
+    tg_intensity->GetXaxis()->SetTitle("x-pos (mm)");
+    tg_ChX_efficiency->GetXaxis()->SetTitle("x-pos (mm)");
   }
   if( scan_z == "true") {
-    tg_ChX_t1->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ChX_t1_std->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ChX_t1_means->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ChX_tot_means->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ChX_tot_untrig_means->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ChX_counts->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ChX_t1_gauss->GetXaxis()->SetTitle("z-pos (um)");
-    tg_intensity->GetXaxis()->SetTitle("z-pos (um)");
-    tg_ChX_efficiency->GetXaxis()->SetTitle("z-pos (um)");
+    tg_ChX_t1->GetXaxis()->SetTitle("z-pos (mm)");
+    tg_ChX_t1_std->GetXaxis()->SetTitle("z-pos (mm)");
+    tg_ChX_t1_means->GetXaxis()->SetTitle("z-pos (mm)");
+    tg_ChX_tot_means->GetXaxis()->SetTitle("z-pos (mm)");
+    tg_ChX_tot_untrig_means->GetXaxis()->SetTitle("z-pos (mm)");
+    tg_ChX_counts->GetXaxis()->SetTitle("z-pos (mm)");
+    tg_ChX_t1_gauss->GetXaxis()->SetTitle("z-pos (mm)");
+    tg_intensity->GetXaxis()->SetTitle("z-pos (mm)");
+    tg_ChX_efficiency->GetXaxis()->SetTitle("z-pos (mm)");
   }
   if( scan_thr == "true") {
     tg_ChX_t1->GetXaxis()->SetTitle("threshold (LSB)");
@@ -457,11 +457,11 @@ void compare(void) {
     if( scan_thr == "true") {
       graph_x = thr_list[i].Atoi();
     } else if( scan_x == "true") {
-      graph_x = xlist[i].Atoi();
+      graph_x = xlist[i].Atof();
     } else if( scan_z == "true") {
-      graph_x = zlist[i].Atoi();
+      graph_x = zlist[i].Atof();
     } else {
-      graph_x = ylist[i].Atoi();
+      graph_x = ylist[i].Atof();
     }
     
     TString graph_x_str;
@@ -582,7 +582,7 @@ void compare(void) {
   tg_ChX_t1->SetLineWidth(4);
   tg_ChX_t1->SetMarkerColor(4);
   tg_ChX_t1->SetMarkerStyle(21);
-  tg_ChX_t1->GetYaxis()->SetRangeUser(-10,20);
+//   tg_ChX_t1->GetYaxis()->SetRangeUser(-10,20);
   if(TDC == "1483") tg_ChX_t1->GetYaxis()->SetRangeUser(-20,-5);
   draw_and_save(tg_ChX_t1,"tg_Ch"+chan+"_t1",outdir,"AP");
 //   tg_ChX_t1->Draw("AP");
@@ -591,7 +591,7 @@ void compare(void) {
   tg_ChX_t1_means->SetLineWidth(4);
   tg_ChX_t1_means->SetMarkerColor(4);
   tg_ChX_t1_means->SetMarkerStyle(21);
-  tg_ChX_t1_means->GetYaxis()->SetRangeUser(-10,20);
+//   tg_ChX_t1_means->GetYaxis()->SetRangeUser(-10,20);
   if(TDC == "1483") tg_ChX_t1_means->GetYaxis()->SetRangeUser(-20,-5);
   draw_and_save(tg_ChX_t1_means,"tg_Ch"+chan+"_t1_means",outdir,"AP");
   
@@ -627,7 +627,7 @@ void compare(void) {
   tg_ChX_t1_std->SetMarkerColor(4);
   tg_ChX_t1_std->SetMarkerStyle(21);
   tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,4);
-  if(TDC == "1483") tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,6);
+//   if(TDC == "1483") tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,6);
   draw_and_save(tg_ChX_t1_std,"tg_Ch"+chan+"_t1_std",outdir,"AP");
   
   tg_ChX_counts->SetLineColor(2);
@@ -648,7 +648,7 @@ void compare(void) {
   tg_intensity->SetMarkerColor(4);
   tg_intensity->SetMarkerStyle(21);
   draw_and_save(tg_intensity,"tg_intensity",outdir,"AP");
-  tg_intensity->GetYaxis()->SetRangeUser(0.0,30.0);
+//   tg_intensity->GetYaxis()->SetRangeUser(0.0,30.0);
   
   
   

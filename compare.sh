@@ -14,11 +14,12 @@ else
   cut -d " " -f 3 $scan_dir/point_list.txt > zlist.txt
 fi
 
-find $scan_dir -name "*.root" | sort > root_files.txt
+find $scan_dir -name "*.hld.root" | sort > root_files.txt
 
 rm intensity_list.txt
-for i in $(find $scan_dir -name "laser_intensity.txt" | sort); do
-echo $(cat $i) | sed 's/,/./' >> intensity_list.txt
-done
+# for i in $(find $scan_dir -name "laser_intensity.txt" | sort); do
+# echo $(cat $i) | sed 's/,/./' >> intensity_list.txt
+# done
+cp $scan_dir/triggers.txt ./intensity_list.txt
 
 root -l 'compare.C()' $2 ## can add -q via #2
