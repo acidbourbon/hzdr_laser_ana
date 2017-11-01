@@ -106,7 +106,7 @@ void draw_and_save(TObject *hist,TString name,TString outdir,TString draw_option
 			Int_t  FI = TColor::CreateGradientColorTable(NRGBs, stops, reds, greens, blues, NCont);
 			gStyle->SetNumberContours(NCont);
 		}
-    TCanvas *c = new TCanvas("c_"+name,"c_"+name,200,10,1024,786);
+    TCanvas *c = new TCanvas("c_"+name,"c_"+name,200,10,640,480);
     c->cd();
     hist->Draw(draw_options);
     c->Print(outdir+name+".png");
@@ -250,7 +250,8 @@ void compare(void) {
   TString scan_z=from_env("scan_z","false");
   TString scan_thr=from_env("scan_thr","false");
   
-  
+  TString graph_x_unit       = "mm";
+  TString graph_x_observable = "y";
   
   ofstream graph_x_txt (outdir+"/graph_x.txt");
   ofstream t1_mean_txt (outdir+"/t1_mean.txt");
@@ -338,6 +339,7 @@ void compare(void) {
     tg_ChX_t1_gauss->GetXaxis()->SetTitle("x-pos (mm)");
     tg_intensity->GetXaxis()->SetTitle("x-pos (mm)");
     tg_ChX_efficiency->GetXaxis()->SetTitle("x-pos (mm)");
+    graph_x_observable = "x";
   }
   if( scan_z == "true") {
     tg_ChX_t1->GetXaxis()->SetTitle("z-pos (mm)");
@@ -349,6 +351,7 @@ void compare(void) {
     tg_ChX_t1_gauss->GetXaxis()->SetTitle("z-pos (mm)");
     tg_intensity->GetXaxis()->SetTitle("z-pos (mm)");
     tg_ChX_efficiency->GetXaxis()->SetTitle("z-pos (mm)");
+    graph_x_observable = "z";
   }
   if( scan_thr == "true") {
     tg_ChX_t1->GetXaxis()->SetTitle("threshold (LSB)");
@@ -360,6 +363,8 @@ void compare(void) {
     tg_ChX_t1_gauss->GetXaxis()->SetTitle("threshold (LSB)");
     tg_intensity->GetXaxis()->SetTitle("threshold (LSB)");
     tg_ChX_efficiency->GetXaxis()->SetTitle("threshold (LSB)");
+    graph_x_observable = "thr";
+    graph_x_unit = "LSB";
   }
   
   
@@ -368,6 +373,8 @@ void compare(void) {
   TFile *f_out = new TFile(outdir+"/compare.root","RECREATE");
   f_out->cd();
   TCanvas * c_t1_all = new TCanvas("t1_all","t1_all",1500,900);
+  
+  TCanvas * c_results_all = new TCanvas("results_all","results_all",1500,900);
   
   
 //   _                                          
@@ -394,7 +401,7 @@ void compare(void) {
   std::vector<TString> intensitylist;
   std::vector<TString> thr_list; 
   
-  c_t1_all->Divide(list.size()/5+1,5);
+  c_t1_all->Divide(3,list.size()/3+1);
   
 //   std::vector<TH1F*> hist_list;
   
@@ -468,9 +475,6 @@ void compare(void) {
     Double_t tot_untrig_std  = CentA_tot_untrig->GetStdDev();
     
     Double_t efficiency = 0;
-    if (ref_counts > 0) {
-      efficiency = counts/ref_counts;
-    }
     
     Float_t t1_gauss_mu = midpoint;
     Float_t t1_gauss_sigma =0;
@@ -519,7 +523,6 @@ void compare(void) {
         tg_ChX_tot_untrig_means->SetPointError (point_no, 0, tot_untrig_std);
         
         tg_ChX_counts->SetPoint(point_no,graph_x,counts);
-        tg_ChX_efficiency->SetPoint(point_no,graph_x,efficiency);
         
         
         tg_intensity->SetPoint(point_no,graph_x,intensity);
@@ -555,12 +558,19 @@ void compare(void) {
         t1_clone->GetXaxis()->SetRangeUser(fit_mean-10*fit_sigma,fit_mean+10*fit_sigma);
         t1_gauss_mu = t1_clone->GetFunction("gaus")->GetParameter(1);
         t1_gauss_sigma = t1_clone->GetFunction("gaus")->GetParameter(2);
-        plotTopLegend(Form("x = %4.1f mm", graph_x), 0.1,1.01);
+        plotTopLegend(Form(graph_x_observable+" = %4.1f "+graph_x_unit, graph_x), 0.1,1.01);
+        
+        counts=t1_clone->Integral(t1_clone->FindBin(fit_mean-10*fit_sigma),t1_clone->FindBin(fit_mean+10*fit_sigma));
+        
+        if (ref_counts > 0) {
+              efficiency = counts/ref_counts;
+            }
         
         
         tg_ChX_t1_gauss->SetPoint(point_no,graph_x,t1_gauss_mu);
         tg_ChX_t1_gauss->SetPointError (point_no, 0, t1_gauss_sigma);
         tg_ChX_t1_std->SetPoint(point_no, graph_x, t1_gauss_sigma);
+        tg_ChX_efficiency->SetPoint(point_no,graph_x,efficiency);
         f->cd();
         
         graph_x_txt << graph_x << endl;
@@ -628,7 +638,10 @@ void compare(void) {
 //  tg_ChX_t1->SetMarkerColor(1);
 //  tg_ChX_t1->SetMarkerStyle(21+i);
 
-
+  
+  Int_t i = 0;
+  
+  c_results_all->Divide(2,2);
 
   
   tg_ChX_t1->SetLineColor(2);
@@ -637,7 +650,7 @@ void compare(void) {
   tg_ChX_t1->SetMarkerStyle(21);
 //   tg_ChX_t1->GetYaxis()->SetRangeUser(-10,20);
   if(TDC == "1483") tg_ChX_t1->GetYaxis()->SetRangeUser(-20,-5);
-  draw_and_save(tg_ChX_t1,"tg_Ch"+chan+"_t1",outdir,"AP");
+//   draw_and_save(tg_ChX_t1,"tg_Ch"+chan+"_t1",outdir,"AP");
 //   tg_ChX_t1->Draw("AP");
   
   tg_ChX_t1_means->SetLineColor(2);
@@ -646,14 +659,17 @@ void compare(void) {
   tg_ChX_t1_means->SetMarkerStyle(21);
 //   tg_ChX_t1_means->GetYaxis()->SetRangeUser(-10,20);
   if(TDC == "1483") tg_ChX_t1_means->GetYaxis()->SetRangeUser(-20,-5);
-  draw_and_save(tg_ChX_t1_means,"tg_Ch"+chan+"_t1_means",outdir,"AP");
+//   draw_and_save(tg_ChX_t1_means,"tg_Ch"+chan+"_t1_means",outdir,"AP");
   
   tg_ChX_t1_gauss->SetLineColor(2);
   tg_ChX_t1_gauss->SetLineWidth(4);
   tg_ChX_t1_gauss->SetMarkerColor(4);
   tg_ChX_t1_gauss->SetMarkerStyle(21);
   tg_ChX_t1_gauss->GetYaxis()->SetRangeUser(-810,-740);
-  draw_and_save(tg_ChX_t1_gauss,"tg_Ch"+chan+"_t1_gauss",outdir,"AP");
+//   draw_and_save(tg_ChX_t1_gauss,"tg_Ch"+chan+"_t1_gauss",outdir,"AP");
+  c_results_all->cd(++i);
+  tg_ChX_t1_gauss->Draw("AP");
+  
   
   
 
@@ -664,7 +680,9 @@ void compare(void) {
   tg_ChX_tot_means->SetMarkerStyle(21);
   tg_ChX_tot_means->GetYaxis()->SetRangeUser(0,600);
   if(TDC == "1483") tg_ChX_tot_means->GetYaxis()->SetRangeUser(0,200);
-  draw_and_save(tg_ChX_tot_means,"tg_Ch"+chan+"_tot_means",outdir,"AP");
+//   draw_and_save(tg_ChX_tot_means,"tg_Ch"+chan+"_tot_means",outdir,"AP");
+  c_results_all->cd(++i);
+  tg_ChX_tot_means->Draw("AP");
   
   tg_ChX_tot_untrig_means->SetLineColor(2);
   tg_ChX_tot_untrig_means->SetLineWidth(4);
@@ -672,7 +690,7 @@ void compare(void) {
   tg_ChX_tot_untrig_means->SetMarkerStyle(21);
   tg_ChX_tot_untrig_means->GetYaxis()->SetRangeUser(0,600);
   if(TDC == "1483") tg_ChX_tot_untrig_means->GetYaxis()->SetRangeUser(0,200);
-  draw_and_save(tg_ChX_tot_untrig_means,"tg_Ch"+chan+"_tot_untrig_means",outdir,"AP");
+//   draw_and_save(tg_ChX_tot_untrig_means,"tg_Ch"+chan+"_tot_untrig_means",outdir,"AP");
   
   
   
@@ -682,26 +700,31 @@ void compare(void) {
   tg_ChX_t1_std->SetMarkerStyle(21);
   tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,15);
 //   if(TDC == "1483") tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,6);
-  draw_and_save(tg_ChX_t1_std,"tg_Ch"+chan+"_t1_std",outdir,"AP");
+//   draw_and_save(tg_ChX_t1_std,"tg_Ch"+chan+"_t1_std",outdir,"APL");
+  c_results_all->cd(++i);
+  tg_ChX_t1_std->Draw("APL");
   
   tg_ChX_counts->SetLineColor(2);
   tg_ChX_counts->SetLineWidth(4);
   tg_ChX_counts->SetMarkerColor(4);
   tg_ChX_counts->SetMarkerStyle(21);
-  draw_and_save(tg_ChX_counts,"tg_Ch"+chan+"_counts",outdir,"AP");
+//   draw_and_save(tg_ChX_counts,"tg_Ch"+chan+"_counts",outdir,"AP");
   
   tg_ChX_efficiency->SetLineColor(2);
   tg_ChX_efficiency->SetLineWidth(4);
   tg_ChX_efficiency->SetMarkerColor(4);
   tg_ChX_efficiency->SetMarkerStyle(21);
+  tg_ChX_efficiency->SetMarkerSize(1);
   tg_ChX_efficiency->GetYaxis()->SetRangeUser(-0.1,1.1);
-  draw_and_save(tg_ChX_efficiency,"tg_Ch"+chan+"_efficiency",outdir,"AP");
+//   draw_and_save(tg_ChX_efficiency,"tg_Ch"+chan+"_efficiency",outdir,"APL");
+  c_results_all->cd(++i);
+  tg_ChX_efficiency->Draw("APL");
   
   tg_intensity->SetLineColor(2);
   tg_intensity->SetLineWidth(4);
   tg_intensity->SetMarkerColor(4);
   tg_intensity->SetMarkerStyle(21);
-  draw_and_save(tg_intensity,"tg_intensity",outdir,"AP");
+//   draw_and_save(tg_intensity,"tg_intensity",outdir,"AP");
 //   tg_intensity->GetYaxis()->SetRangeUser(0.0,30.0);
   
   
@@ -770,8 +793,10 @@ void compare(void) {
   tg_ChX_t1->Write();
   tg_ChX_t1_means->Write();
   tg_ChX_t1_std->Write();
+  tg_ChX_t1_gauss->Write();
+  tg_ChX_counts->Write();
   tg_ChX_tot_means->Write();
-  
+  c_t1_all->Write();
   
   f_out->Write();
   

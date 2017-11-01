@@ -6,3 +6,4 @@ TDC=1482 chan=05 ./compare.sh ../data/thr_scan_PASTTREC_77_pkt20/
 TDC=0351 chan=17 scan_x=true ./compare.sh ../data/x_scan_dummy4_2/
 TDC=0353 chan=07 scan_x=true ./compare.sh ../l8n8_data/015_xscan_ASD8_1_ch7/
 TDC=0351 chan=07 scan_thr=true ./compare.sh ../l8n8_data/026_param_scan_pt_edge_ho_pkt10/gain_4/
+TDC=0351 chan=07 scan_x=true ./compare.sh ../l8n8_data/029_xscan_pasttrec_gain1_pkt10_thr10/
