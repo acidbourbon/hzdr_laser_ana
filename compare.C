@@ -15,6 +15,31 @@
 //   return src_file.good();
 // }
 
+
+TLatex* plotTopLegend(char* label,Float_t x=-1,Float_t y=-1,Float_t size=0.06,Int_t color=1,Float_t angle=0.0, Int_t align=11)
+{
+    // coordinates in NDC! (pad bottom left corner = (0,0); pad top right corner = (1,1);)
+    // plots the string label in position x and y in NDC coordinates
+    // size is the text size
+    // color is the text color
+ 
+    if(x<0||y<0)
+    {   // defaults
+      x=gPad->GetLeftMargin()*1.15;
+      y=(1-gPad->GetTopMargin())*1.04;
+    }
+    y= y-y*gPad->GetTopMargin();
+ 
+    TLatex* text=new TLatex(x,y,label);
+    text->SetTextSize(size);
+    text->SetNDC();
+    text->SetTextColor(color);
+    text->SetTextAngle(angle);
+    text->SetTextAlign(align);
+    text->Draw();
+    return text;
+}
+
 std::vector<TString> file_to_str_array(TString fname) {
   
   ifstream in;
@@ -124,6 +149,7 @@ void get_gauss_params(TH1F* histogram, Float_t* target_mu, Float_t* target_sigma
 
 void get_toa_offset(TH1F* toa0, Float_t* intersect, Float_t* midpoint) {
     
+  TCanvas * dummy_canvas = new TCanvas("dummy","dummy",100,100);
   TH1* cum_toa0 = toa0->GetCumulative();
   Int_t cum_toa0_sum = cum_toa0->GetBinContent(cum_toa0->GetEntries());
 //   cout << "toa0 sum " << cum_toa0_sum <<endl;
@@ -168,6 +194,7 @@ void get_toa_offset(TH1F* toa0, Float_t* intersect, Float_t* midpoint) {
   cum_toa0->Fit(fa,"q","", cum_toa0_left,cum_toa0_right);
   
   *intersect = -fa->GetParameter(0)/fa->GetParameter(1);
+  dummy_canvas->Delete();
   
 //   cout << "x intersect " << x_intersect << endl;
   
@@ -211,6 +238,8 @@ void compare(void) {
 //   Int_t thresh_bins = 128;
 //   Float_t thresh_start = 0;
 //   Float_t thresh_stop  = 127;
+    
+    
     
   TString TDC=from_env("TDC","1482");
   TString chan=from_env("chan","05");
@@ -336,6 +365,8 @@ void compare(void) {
   
   
   TFile *f_out = new TFile(outdir+"/compare.root","RECREATE");
+  f_out->cd();
+  TCanvas * c_t1_all = new TCanvas("t1_all","t1_all",1500,900);
   
   
 //   _                                          
@@ -362,6 +393,8 @@ void compare(void) {
   std::vector<TString> intensitylist;
   std::vector<TString> thr_list; 
   
+  c_t1_all->Divide(list.size()/5+1,5);
+  
 //   std::vector<TH1F*> hist_list;
   
   if ( scan_thr == "true" ){
@@ -379,6 +412,7 @@ void compare(void) {
 //   leg->AddEntry(h1,"Histogram filled with random numbers","f");
 //   leg->AddEntry("f1","Function abs(#frac{sin(x)}{x})","l");
 //   leg->AddEntry("gr","Graph with error bars","lep");
+  
   
   Int_t point_no = 0;
   for (Int_t i = 0; i< list.size(); i++){
@@ -403,6 +437,7 @@ void compare(void) {
     f->cd();
     
     TH1F* CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_t1"));  
+    
     TH2F* CentA_potato = ((TH2F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_potato"));  
     
     //HistXCut(CentA_t1,-50,90);
@@ -509,6 +544,18 @@ void compare(void) {
         potato_clone->Write();
         tot_clone->Write();
         tot_untrig_clone->Write();
+        
+//         c_t1_all->Clear() ;
+//         c_t1_all->Divide(8,3) ;
+        c_t1_all->cd(1+i) ;
+        
+        t1_clone->DrawCopy();
+//         t1_clone->Fit("gaus","WW q","",-900,-600);
+//         float fit_mean =  t1_clone->GetFunction("gaus")->GetParameter(1);
+//         float fit_sigma =  t1_clone->GetFunction("gaus")->GetParameter(2);	
+//         t1_clone->Fit("gaus","WW","",fit_mean-2*fit_sigma,fit_mean+2*fit_sigma);
+//         t1_clone->GetXaxis()->SetRangeUser(fit_mean-10*fit_sigma,fit_mean+10*fit_sigma);
+        plotTopLegend(Form("x = %4.1f mm", graph_x), 0.1,1.01);
         f->cd();
         
         graph_x_txt << graph_x << endl;
@@ -575,6 +622,7 @@ void compare(void) {
 //  tg_ChX_t1->SetMarkerSize(13);
 //  tg_ChX_t1->SetMarkerColor(1);
 //  tg_ChX_t1->SetMarkerStyle(21+i);
+
 
 
   
@@ -653,14 +701,14 @@ void compare(void) {
   
   
   
-  TSeqCollection * canvases = gROOT->GetListOfCanvases();
-  
-  for (Int_t i = 0; i < canvases->GetEntries(); i++) {
-    ((TCanvas*) canvases->At(i))->Modified();
-    ((TCanvas*) canvases->At(i))->Update();
-    
-    cout << ((TCanvas*) canvases->At(i))->GetName() << endl;
-  }
+//   TSeqCollection * canvases = gROOT->GetListOfCanvases();
+//   
+//   for (Int_t i = 0; i < canvases->GetEntries(); i++) {
+//     ((TCanvas*) canvases->At(i))->Modified();
+//     ((TCanvas*) canvases->At(i))->Update();
+//     
+//     cout << ((TCanvas*) canvases->At(i))->GetName() << endl;
+//   }
 
 //                                      _ _           _             
 //                          ___        | (_)         | |            
