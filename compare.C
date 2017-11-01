@@ -305,7 +305,7 @@ void compare(void) {
   tg_ChX_tot_untrig_means->GetXaxis()->SetTitle("y-pos (mm)");
   tg_ChX_tot_untrig_means->GetYaxis()->SetTitle("tot (ns)");
   
-  TGraph *tg_ChX_t1_std = new TGraph();
+  TGraphErrors *tg_ChX_t1_std = new TGraphErrors();
   tg_ChX_t1_std->SetTitle("t1 Ch"+chan+" StdDevs");
   tg_ChX_t1_std->SetName("tg_ChX_t1_std");
   tg_ChX_t1_std->GetXaxis()->SetTitle("y-pos (mm)");
@@ -374,7 +374,6 @@ void compare(void) {
   f_out->cd();
   TCanvas * c_t1_all = new TCanvas("t1_all","t1_all",1500,900);
   
-  TCanvas * c_results_all = new TCanvas("results_all","results_all",1500,900);
   
   
 //   _                                          
@@ -558,6 +557,7 @@ void compare(void) {
         t1_clone->GetXaxis()->SetRangeUser(fit_mean-10*fit_sigma,fit_mean+10*fit_sigma);
         t1_gauss_mu = t1_clone->GetFunction("gaus")->GetParameter(1);
         t1_gauss_sigma = t1_clone->GetFunction("gaus")->GetParameter(2);
+        float t1_gauss_sigma_error = t1_clone->GetFunction("gaus")->GetParError(2);
         plotTopLegend(Form(graph_x_observable+" = %4.1f "+graph_x_unit, graph_x), 0.1,1.01);
         
         counts=t1_clone->Integral(t1_clone->FindBin(fit_mean-10*fit_sigma),t1_clone->FindBin(fit_mean+10*fit_sigma));
@@ -570,6 +570,7 @@ void compare(void) {
         tg_ChX_t1_gauss->SetPoint(point_no,graph_x,t1_gauss_mu);
         tg_ChX_t1_gauss->SetPointError (point_no, 0, t1_gauss_sigma);
         tg_ChX_t1_std->SetPoint(point_no, graph_x, t1_gauss_sigma);
+        tg_ChX_t1_std->SetPointError(point_no, 0, t1_gauss_sigma_error);
         tg_ChX_efficiency->SetPoint(point_no,graph_x,efficiency);
         f->cd();
         
@@ -641,6 +642,7 @@ void compare(void) {
   
   Int_t i = 0;
   
+  TCanvas * c_results_all = new TCanvas("results_all","results_all",1024,786);
   c_results_all->Divide(2,2);
 
   
@@ -665,7 +667,7 @@ void compare(void) {
   tg_ChX_t1_gauss->SetLineWidth(4);
   tg_ChX_t1_gauss->SetMarkerColor(4);
   tg_ChX_t1_gauss->SetMarkerStyle(21);
-  tg_ChX_t1_gauss->GetYaxis()->SetRangeUser(-810,-740);
+  tg_ChX_t1_gauss->GetYaxis()->SetRangeUser(-800,-770);
 //   draw_and_save(tg_ChX_t1_gauss,"tg_Ch"+chan+"_t1_gauss",outdir,"AP");
   c_results_all->cd(++i);
   tg_ChX_t1_gauss->Draw("AP");
@@ -674,15 +676,6 @@ void compare(void) {
   
 
   
-  tg_ChX_tot_means->SetLineColor(2);
-  tg_ChX_tot_means->SetLineWidth(4);
-  tg_ChX_tot_means->SetMarkerColor(4);
-  tg_ChX_tot_means->SetMarkerStyle(21);
-  tg_ChX_tot_means->GetYaxis()->SetRangeUser(0,600);
-  if(TDC == "1483") tg_ChX_tot_means->GetYaxis()->SetRangeUser(0,200);
-//   draw_and_save(tg_ChX_tot_means,"tg_Ch"+chan+"_tot_means",outdir,"AP");
-  c_results_all->cd(++i);
-  tg_ChX_tot_means->Draw("AP");
   
   tg_ChX_tot_untrig_means->SetLineColor(2);
   tg_ChX_tot_untrig_means->SetLineWidth(4);
@@ -698,11 +691,24 @@ void compare(void) {
   tg_ChX_t1_std->SetLineWidth(4);
   tg_ChX_t1_std->SetMarkerColor(4);
   tg_ChX_t1_std->SetMarkerStyle(21);
-  tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,15);
+  tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,10);
 //   if(TDC == "1483") tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,6);
 //   draw_and_save(tg_ChX_t1_std,"tg_Ch"+chan+"_t1_std",outdir,"APL");
   c_results_all->cd(++i);
   tg_ChX_t1_std->Draw("APL");
+  
+  
+  
+  
+  tg_ChX_tot_means->SetLineColor(2);
+  tg_ChX_tot_means->SetLineWidth(4);
+  tg_ChX_tot_means->SetMarkerColor(4);
+  tg_ChX_tot_means->SetMarkerStyle(21);
+  tg_ChX_tot_means->GetYaxis()->SetRangeUser(0,600);
+  if(TDC == "1483") tg_ChX_tot_means->GetYaxis()->SetRangeUser(0,200);
+//   draw_and_save(tg_ChX_tot_means,"tg_Ch"+chan+"_tot_means",outdir,"AP");
+  c_results_all->cd(++i);
+  tg_ChX_tot_means->Draw("AP");
   
   tg_ChX_counts->SetLineColor(2);
   tg_ChX_counts->SetLineWidth(4);
