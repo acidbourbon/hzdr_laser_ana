@@ -517,13 +517,10 @@ void compare(void) {
         tg_ChX_tot_means->SetPointError (point_no, 0, tot_std);
         tg_ChX_tot_untrig_means->SetPoint(point_no,graph_x,tot_untrig_mean);
         tg_ChX_tot_untrig_means->SetPointError (point_no, 0, tot_untrig_std);
-        tg_ChX_t1_std->SetPoint(point_no, graph_x, t1_std);
         
         tg_ChX_counts->SetPoint(point_no,graph_x,counts);
         tg_ChX_efficiency->SetPoint(point_no,graph_x,efficiency);
         
-        tg_ChX_t1_gauss->SetPoint(point_no,graph_x,t1_gauss_mu);
-        tg_ChX_t1_gauss->SetPointError (point_no, 0, t1_gauss_sigma);
         
         tg_intensity->SetPoint(point_no,graph_x,intensity);
         
@@ -556,7 +553,14 @@ void compare(void) {
         float fit_sigma =  t1_clone->GetFunction("gaus")->GetParameter(2);	
         t1_clone->Fit("gaus","WW","",fit_mean-2*fit_sigma,fit_mean+2*fit_sigma);
         t1_clone->GetXaxis()->SetRangeUser(fit_mean-10*fit_sigma,fit_mean+10*fit_sigma);
+        t1_gauss_mu = t1_clone->GetFunction("gaus")->GetParameter(1);
+        t1_gauss_sigma = t1_clone->GetFunction("gaus")->GetParameter(2);
         plotTopLegend(Form("x = %4.1f mm", graph_x), 0.1,1.01);
+        
+        
+        tg_ChX_t1_gauss->SetPoint(point_no,graph_x,t1_gauss_mu);
+        tg_ChX_t1_gauss->SetPointError (point_no, 0, t1_gauss_sigma);
+        tg_ChX_t1_std->SetPoint(point_no, graph_x, t1_gauss_sigma);
         f->cd();
         
         graph_x_txt << graph_x << endl;
@@ -648,6 +652,7 @@ void compare(void) {
   tg_ChX_t1_gauss->SetLineWidth(4);
   tg_ChX_t1_gauss->SetMarkerColor(4);
   tg_ChX_t1_gauss->SetMarkerStyle(21);
+  tg_ChX_t1_gauss->GetYaxis()->SetRangeUser(-810,-740);
   draw_and_save(tg_ChX_t1_gauss,"tg_Ch"+chan+"_t1_gauss",outdir,"AP");
   
   
@@ -675,7 +680,7 @@ void compare(void) {
   tg_ChX_t1_std->SetLineWidth(4);
   tg_ChX_t1_std->SetMarkerColor(4);
   tg_ChX_t1_std->SetMarkerStyle(21);
-  tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,4);
+  tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,15);
 //   if(TDC == "1483") tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,6);
   draw_and_save(tg_ChX_t1_std,"tg_Ch"+chan+"_t1_std",outdir,"AP");
   
