@@ -239,6 +239,7 @@ void compare(void) {
 //   Float_t thresh_start = 0;
 //   Float_t thresh_stop  = 127;
     
+    TH1::AddDirectory(kFALSE);
     
     
   TString TDC=from_env("TDC","1482");
@@ -540,7 +541,7 @@ void compare(void) {
         new_hist_name.Form("%04.1f_tot_untrig_hist",graph_x);
         tot_untrig_clone->SetName(new_hist_name);
         f_out->cd();
-        t1_clone->Write();
+//         t1_clone->Write();
         potato_clone->Write();
         tot_clone->Write();
         tot_untrig_clone->Write();
@@ -549,12 +550,12 @@ void compare(void) {
 //         c_t1_all->Divide(8,3) ;
         c_t1_all->cd(1+i) ;
         
-        t1_clone->DrawCopy();
-//         t1_clone->Fit("gaus","WW q","",-900,-600);
-//         float fit_mean =  t1_clone->GetFunction("gaus")->GetParameter(1);
-//         float fit_sigma =  t1_clone->GetFunction("gaus")->GetParameter(2);	
-//         t1_clone->Fit("gaus","WW","",fit_mean-2*fit_sigma,fit_mean+2*fit_sigma);
-//         t1_clone->GetXaxis()->SetRangeUser(fit_mean-10*fit_sigma,fit_mean+10*fit_sigma);
+        t1_clone->Draw();
+        t1_clone->Fit("gaus","WW q","",t1 - 20,t1 + 20);
+        float fit_mean =  t1_clone->GetFunction("gaus")->GetParameter(1);
+        float fit_sigma =  t1_clone->GetFunction("gaus")->GetParameter(2);	
+        t1_clone->Fit("gaus","WW","",fit_mean-2*fit_sigma,fit_mean+2*fit_sigma);
+        t1_clone->GetXaxis()->SetRangeUser(fit_mean-10*fit_sigma,fit_mean+10*fit_sigma);
         plotTopLegend(Form("x = %4.1f mm", graph_x), 0.1,1.01);
         f->cd();
         
