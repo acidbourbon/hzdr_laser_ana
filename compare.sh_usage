@@ -7,3 +7,6 @@ TDC=0351 chan=17 scan_x=true ./compare.sh ../data/x_scan_dummy4_2/
 TDC=0353 chan=07 scan_x=true ./compare.sh ../l8n8_data/015_xscan_ASD8_1_ch7/
 TDC=0351 chan=07 scan_thr=true ./compare.sh ../l8n8_data/026_param_scan_pt_edge_ho_pkt10/gain_4/
 TDC=0351 chan=07 scan_x=true ./compare.sh ../l8n8_data/029_xscan_pasttrec_gain1_pkt10_thr10/
+TDC=0353 chan=07 scan_thr=true ./compare.sh ../data/HV_dep_ASD8/edge/ # quick and dirty HV analysis
+TDC=0351 chan=16 scan_thr=true ./compare.sh ../data/82_18_gas_plateau/ ## the plateau curve for new gas, measured with super efficient pasttrec
+TDC=0351 chan=07 scan_x=true ./compare.sh ../l8n8_data/096_xscan_PT_fav_8218_1650V/

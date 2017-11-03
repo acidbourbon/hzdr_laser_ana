@@ -106,7 +106,7 @@ void draw_and_save(TObject *hist,TString name,TString outdir,TString draw_option
 			Int_t  FI = TColor::CreateGradientColorTable(NRGBs, stops, reds, greens, blues, NCont);
 			gStyle->SetNumberContours(NCont);
 		}
-    TCanvas *c = new TCanvas("c_"+name,"c_"+name,200,10,640,480);
+    TCanvas *c = new TCanvas("c_"+name,"c_"+name,200,10,640,640);
     c->cd();
     hist->Draw(draw_options);
     c->Print(outdir+name+".png");
@@ -667,8 +667,8 @@ void compare(void) {
   tg_ChX_t1_gauss->SetLineWidth(4);
   tg_ChX_t1_gauss->SetMarkerColor(4);
   tg_ChX_t1_gauss->SetMarkerStyle(21);
-  tg_ChX_t1_gauss->GetYaxis()->SetRangeUser(-800,-770);
-//   draw_and_save(tg_ChX_t1_gauss,"tg_Ch"+chan+"_t1_gauss",outdir,"AP");
+  tg_ChX_t1_gauss->GetYaxis()->SetRangeUser(-800-20,-725-20);
+  draw_and_save(tg_ChX_t1_gauss,"tg_Ch"+chan+"_t1_gauss",outdir,"APL");
   c_results_all->cd(++i);
   tg_ChX_t1_gauss->Draw("AP");
   
@@ -691,9 +691,9 @@ void compare(void) {
   tg_ChX_t1_std->SetLineWidth(4);
   tg_ChX_t1_std->SetMarkerColor(4);
   tg_ChX_t1_std->SetMarkerStyle(21);
-  tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,10);
+  tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,12);
 //   if(TDC == "1483") tg_ChX_t1_std->GetYaxis()->SetRangeUser(0,6);
-//   draw_and_save(tg_ChX_t1_std,"tg_Ch"+chan+"_t1_std",outdir,"APL");
+  draw_and_save(tg_ChX_t1_std,"tg_Ch"+chan+"_t1_std",outdir,"APL");
   c_results_all->cd(++i);
   tg_ChX_t1_std->Draw("APL");
   
@@ -801,6 +801,7 @@ void compare(void) {
   tg_ChX_t1_std->Write();
   tg_ChX_t1_gauss->Write();
   tg_ChX_counts->Write();
+  tg_ChX_efficiency->Write();
   tg_ChX_tot_means->Write();
   c_t1_all->Write();
   
