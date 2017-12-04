@@ -244,6 +244,8 @@ void compare(void) {
     
   TString TDC=from_env("TDC","1482");
   TString chan=from_env("chan","05");
+  
+  TString t1_source=from_env("t1_source","");
     
   TString outdir=from_env("outdir","./");
   TString scan_x=from_env("scan_x","false");
@@ -443,7 +445,12 @@ void compare(void) {
     
     f->cd();
     
-    TH1F* CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_t1"));  
+    TH1F* CentA_t1;
+    if( t1_source != "" ){
+      CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_"+t1_source));  
+    } else {
+      CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_t1"));  
+    }
     
     TH2F* CentA_potato = ((TH2F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_potato"));  
     

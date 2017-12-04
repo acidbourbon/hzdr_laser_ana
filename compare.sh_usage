@@ -10,3 +10,4 @@ TDC=0351 chan=07 scan_x=true ./compare.sh ../l8n8_data/029_xscan_pasttrec_gain1_
 TDC=0353 chan=07 scan_thr=true ./compare.sh ../data/HV_dep_ASD8/edge/ # quick and dirty HV analysis
 TDC=0351 chan=16 scan_thr=true ./compare.sh ../data/82_18_gas_plateau/ ## the plateau curve for new gas, measured with super efficient pasttrec
 TDC=0351 chan=07 scan_x=true ./compare.sh ../l8n8_data/096_xscan_PT_fav_8218_1650V/
+#self tracking (no gap) thr scan\TDC=0351 chan=07 t1_source=fish_proj_17_vs_07 scan_thr=true ./compare.sh ../l8n8_data/019_param_scan_pt_pkt10/gain_4/
