@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 
+#define peak_hood 30
 
 
 // Bool_t file_exists(TString fname){
@@ -241,8 +242,31 @@ void compare(void) {
     
     TH1::AddDirectory(kFALSE);
     
+  
+  gStyle->SetOptFit();
+    
     
   TString TDC=from_env("TDC","1482");
+  
+  // default case: is ASD8 data
+  
+    Float_t backgnd_scale_0     = 1.509e-01;
+    Float_t backgnd_shift_1 = 1.0354;
+    Float_t backgnd_scale_2 = 3.124;
+    Float_t x_shift         = 5;
+  
+  
+  if (TDC == "0351") { // is PASTTREC data
+    backgnd_scale_0 = 0.2;
+    backgnd_shift_1 = 1.05;
+    backgnd_scale_2 = 2.6;
+    x_shift         = 0;
+  }    
+  
+  
+  
+  
+  
   TString chan=from_env("chan","05");
   
   TString t1_source=from_env("t1_source","");
@@ -503,7 +527,7 @@ void compare(void) {
     if( scan_thr == "true") {
       graph_x = thr_list[i].Atoi();
     } else if( scan_x == "true") {
-      graph_x = xlist[i].Atof();
+      graph_x = xlist[i].Atof() + x_shift;
     } else if( scan_z == "true") {
       graph_x = zlist[i].Atof();
     } else {
@@ -557,17 +581,51 @@ void compare(void) {
         c_t1_all->cd(1+i) ;
         
         t1_clone->Draw();
+        
+        
+        
+        // fitting the peaks
+        
+        
         t1_clone->Fit("gaus","WW q","",t1 - 20,t1 + 20);
-        float fit_mean =  t1_clone->GetFunction("gaus")->GetParameter(1);
+        float fit_const =  t1_clone->GetFunction("gaus")->GetParameter(0);	
+        float fit_mean  =  t1_clone->GetFunction("gaus")->GetParameter(1);
         float fit_sigma =  t1_clone->GetFunction("gaus")->GetParameter(2);	
-        t1_clone->Fit("gaus","WW","",fit_mean-2*fit_sigma,fit_mean+2*fit_sigma);
-        t1_clone->GetXaxis()->SetRangeUser(fit_mean-10*fit_sigma,fit_mean+10*fit_sigma);
-        t1_gauss_mu = t1_clone->GetFunction("gaus")->GetParameter(1);
-        t1_gauss_sigma = t1_clone->GetFunction("gaus")->GetParameter(2);
-        float t1_gauss_sigma_error = t1_clone->GetFunction("gaus")->GetParError(2);
+        float max = fit_mean;
+        
+        HistXCut(t1_clone, max-peak_hood,max+peak_hood );
+        
+
+        t1_clone->GetXaxis()->SetRangeUser(max-peak_hood,max+peak_hood);
+        TF1 *fit	= new TF1 ("fit",
+                               Form("[0]*TMath::Gaus(x,[1],[2])+%f*[0]*TMath::Gaus(x,[1]+%f*[2],%f*[2])",backgnd_scale_0, backgnd_shift_1, backgnd_scale_2)
+                               ,max-peak_hood,max+peak_hood);
+        fit->SetParameter(1,fit_mean);
+        fit->SetParameter(2,fit_sigma);
+        t1_clone->Fit(fit);
+        
+        float main_peak_const = fit->GetParameter(0);
+        float main_peak_mean  = fit->GetParameter(1);
+        float main_peak_sigma = fit->GetParameter(2);
+        
+        TF1 *back = new TF1 ("fit",
+                               Form("0*[0]*TMath::Gaus(x,[1],[2])+%f*[0]*TMath::Gaus(x,[1]+%f*[2],%f*[2])",backgnd_scale_0, backgnd_shift_1, backgnd_scale_2)
+                               ,max-peak_hood,max+peak_hood);
+        back->SetLineColor(3);
+        back->SetParameter(0,main_peak_const);
+        back->SetParameter(1,main_peak_mean);
+        back->SetParameter(2,main_peak_sigma);
+        back->Draw("same");
+        
+        float t1_gauss_sigma_error = fit->GetParError(2);
+        
+        t1_gauss_mu    = fit->GetParameter(1); 
+        t1_gauss_sigma = fit->GetParameter(2); 
+        
         plotTopLegend(Form(graph_x_observable+" = %4.1f "+graph_x_unit, graph_x), 0.1,1.01);
         
-        counts=t1_clone->Integral(t1_clone->FindBin(fit_mean-10*fit_sigma),t1_clone->FindBin(fit_mean+10*fit_sigma));
+//         counts=t1_clone->Integral(t1_clone->FindBin(fit_mean-10*fit_sigma),t1_clone->FindBin(fit_mean+10*fit_sigma));
+        counts=t1_clone->Integral(max-peak_hood,max+peak_hood);
         
         if (ref_counts > 0) {
               efficiency = counts/ref_counts;
