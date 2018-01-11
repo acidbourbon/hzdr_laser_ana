@@ -393,6 +393,13 @@ void compare(void) {
     graph_x_unit = "LSB";
   }
   
+  TH2F* pulse_tomography;
+  
+  if(TDC == "0351"){ // is PASTTREC data
+    pulse_tomography = new TH2F("pulse_tomography","pulse_tomography",300,-1000,0,100,0,100);
+  } else { // is ASD8 Data
+    pulse_tomography = new TH2F("pulse_tomography","pulse_tomography",500,-1000,0,60,0,30000);
+  }
   
   
   
@@ -470,35 +477,39 @@ void compare(void) {
     f->cd();
     
     TH1F* CentA_t1;
+    TH1F* CentA_t1_walkc;
+    TH1F* CentA_t2;
     if( t1_source != "" ){
       CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_"+t1_source));  
     } else {
       CentA_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_t1"));  
+      CentA_t1_walkc = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_walkc_t1"));  
+      CentA_t2 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_t2"));  
     }
     
     TH2F* CentA_potato = ((TH2F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_potato"));  
     
-    //HistXCut(CentA_t1,-50,90);
-    //cut_around_maximum(CentA_t1,10,10);
+    //HistXCut(CentA_t1_walkc,-50,90);
+    //cut_around_maximum(CentA_t1_walkc,10,10);
     
     TH1F* CentA_tot = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_tot"));  
-//     CentA_t1->Rebin(4);
+//     CentA_t1_walkc->Rebin(4);
     TH1F* CentA_tot_untrig = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_tot_untrig"));  
     TH1F* RefChan_t1 = ((TH1F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+REFCHAN+"_t1"));  
     
     
     Float_t intersect = 0;
     Float_t midpoint = 0;
-    get_toa_offset(CentA_t1, &intersect, &midpoint);
+    get_toa_offset(CentA_t1_walkc, &intersect, &midpoint);
 
     Float_t t1 = midpoint;
     if(use_intersect) {
       t1 = intersect;
     }
-    Double_t t1_mean = CentA_t1->GetMean();
-    Double_t counts = CentA_t1->Integral();
+    Double_t t1_mean = CentA_t1_walkc->GetMean();
+    Double_t counts = CentA_t1_walkc->Integral();
     Double_t ref_counts = RefChan_t1->Integral();
-    Double_t t1_std  = CentA_t1->GetStdDev();
+    Double_t t1_std  = CentA_t1_walkc->GetStdDev();
     Double_t tot_mean = CentA_tot->GetMean();
     Double_t tot_std  = CentA_tot->GetStdDev();
     Double_t tot_untrig_mean = CentA_tot_untrig->GetMean();
@@ -509,7 +520,7 @@ void compare(void) {
     Float_t t1_gauss_mu = midpoint;
     Float_t t1_gauss_sigma =0;
     
-    //get_gauss_params(CentA_t1,&t1_gauss_mu,&t1_gauss_sigma);
+    //get_gauss_params(CentA_t1_walkc,&t1_gauss_mu,&t1_gauss_sigma);
     
     
   if ( scan_thr == "true" ){
@@ -536,7 +547,7 @@ void compare(void) {
     
     TString graph_x_str;
     graph_x_str.Form("%06.2f",graph_x);
-    if(DRAW_ALL_T1){ draw_and_save(CentA_t1,"CentA_t1"+graph_x_str,outdir,""); }
+    if(DRAW_ALL_T1){ draw_and_save(CentA_t1_walkc,"CentA_t1_walkc"+graph_x_str,outdir,""); }
     
     Double_t intensity = intensitylist[i].Atof();
 //     cout << "intensity" << intensitylist[i] << endl;
@@ -558,12 +569,14 @@ void compare(void) {
         tg_intensity->SetPoint(point_no,graph_x,intensity);
         
         TH1F* t1_clone = (TH1F*) CentA_t1->Clone();
+        TH1F* t1_walkc_clone = (TH1F*) CentA_t1_walkc->Clone();
+        TH1F* t2_clone = (TH1F*) CentA_t2->Clone();
         TH2F* potato_clone = (TH2F*) CentA_potato->Clone();
         TH1F* tot_clone = (TH1F*) CentA_tot->Clone();
         TH1F* tot_untrig_clone = (TH1F*) CentA_tot_untrig->Clone();
         TString new_hist_name;
         new_hist_name.Form("%04.1f_t1_hist",graph_x);
-        t1_clone->SetName(new_hist_name);
+        t1_walkc_clone->SetName(new_hist_name);
         new_hist_name.Form("%04.1f_potato_hist",graph_x);
         potato_clone->SetName(new_hist_name);
         new_hist_name.Form("%04.1f_tot_hist",graph_x);
@@ -571,7 +584,7 @@ void compare(void) {
         new_hist_name.Form("%04.1f_tot_untrig_hist",graph_x);
         tot_untrig_clone->SetName(new_hist_name);
         f_out->cd();
-//         t1_clone->Write();
+//         t1_walkc_clone->Write();
         potato_clone->Write();
         tot_clone->Write();
         tot_untrig_clone->Write();
@@ -580,29 +593,36 @@ void compare(void) {
 //         c_t1_all->Divide(8,3) ;
         c_t1_all->cd(1+i) ;
         
-        t1_clone->Draw();
+        t1_walkc_clone->Draw();
         
+        for(int xbin = 1; xbin < t1_clone->GetSize(); ++xbin){
+          float x = t1_clone->GetXaxis()->GetBinCenter(xbin);
+          pulse_tomography->SetBinContent(
+            pulse_tomography->FindBin(x,(float) graph_x),
+            t1_clone->GetBinContent(xbin) + t2_clone->GetBinContent(xbin)
+          );
+        }
         
         
         // fitting the peaks
         
         
-        t1_clone->Fit("gaus","WW q","",t1 - 20,t1 + 20);
-        float fit_const =  t1_clone->GetFunction("gaus")->GetParameter(0);	
-        float fit_mean  =  t1_clone->GetFunction("gaus")->GetParameter(1);
-        float fit_sigma =  t1_clone->GetFunction("gaus")->GetParameter(2);	
+        t1_walkc_clone->Fit("gaus","WW q","",t1 - 20,t1 + 20);
+        float fit_const =  t1_walkc_clone->GetFunction("gaus")->GetParameter(0);	
+        float fit_mean  =  t1_walkc_clone->GetFunction("gaus")->GetParameter(1);
+        float fit_sigma =  t1_walkc_clone->GetFunction("gaus")->GetParameter(2);	
         float max = fit_mean;
         
-        HistXCut(t1_clone, max-peak_hood,max+peak_hood );
+        HistXCut(t1_walkc_clone, max-peak_hood,max+peak_hood );
         
 
-        t1_clone->GetXaxis()->SetRangeUser(max-peak_hood,max+peak_hood);
+        t1_walkc_clone->GetXaxis()->SetRangeUser(max-peak_hood,max+peak_hood);
         TF1 *fit	= new TF1 ("fit",
                                Form("[0]*TMath::Gaus(x,[1],[2])+%f*[0]*TMath::Gaus(x,[1]+%f*[2],%f*[2])",backgnd_scale_0, backgnd_shift_1, backgnd_scale_2)
                                ,max-peak_hood,max+peak_hood);
         fit->SetParameter(1,fit_mean);
         fit->SetParameter(2,fit_sigma);
-        t1_clone->Fit(fit);
+        t1_walkc_clone->Fit(fit);
         
         float main_peak_const = fit->GetParameter(0);
         float main_peak_mean  = fit->GetParameter(1);
@@ -624,8 +644,8 @@ void compare(void) {
         
         plotTopLegend(Form(graph_x_observable+" = %4.1f "+graph_x_unit, graph_x), 0.1,1.01);
         
-//         counts=t1_clone->Integral(t1_clone->FindBin(fit_mean-10*fit_sigma),t1_clone->FindBin(fit_mean+10*fit_sigma));
-        counts=t1_clone->Integral(max-peak_hood,max+peak_hood);
+//         counts=t1_walkc_clone->Integral(t1_walkc_clone->FindBin(fit_mean-10*fit_sigma),t1_walkc_clone->FindBin(fit_mean+10*fit_sigma));
+        counts=t1_walkc_clone->Integral(max-peak_hood,max+peak_hood);
         
         if (ref_counts > 0) {
               efficiency = counts/ref_counts;
@@ -654,18 +674,18 @@ void compare(void) {
     
     TString a;
     a.Form("%04.1f_t1_hist",graph_x);
-    //draw_and_save(CentA_t1,a,outdir,"");
+    //draw_and_save(CentA_t1_walkc,a,outdir,"");
     cout << "t1   : " << t1 << endl;
     
     
-    leg->AddEntry(CentA_t1,"entry","l");
-    CentA_t1->SetLineColor(color_contrast_array[i]);
-    CentA_t1->GetYaxis()->SetRangeUser(0,1000);
+    leg->AddEntry(CentA_t1_walkc,"entry","l");
+    CentA_t1_walkc->SetLineColor(color_contrast_array[i]);
+    CentA_t1_walkc->GetYaxis()->SetRangeUser(0,1000);
     
 //     if(i > 0) {
-//         CentA_t1->DrawCopy("same");
+//         CentA_t1_walkc->DrawCopy("same");
 //     } else {
-//         CentA_t1->DrawCopy();
+//         CentA_t1_walkc->DrawCopy();
 //     }
     
 //     leg->Draw();
@@ -860,6 +880,8 @@ void compare(void) {
 //   
 //   
   
+  draw_and_save(pulse_tomography,"pulse_tomography "+chan,outdir,"colz");
+  
   f_out->cd();
   tg_ChX_t1->Write();
   tg_ChX_t1_means->Write();
@@ -868,6 +890,7 @@ void compare(void) {
   tg_ChX_counts->Write();
   tg_ChX_efficiency->Write();
   tg_ChX_tot_means->Write();
+  pulse_tomography->Write();
   c_t1_all->Write();
   
   f_out->Write();
