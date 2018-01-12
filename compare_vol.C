@@ -9,6 +9,8 @@
 #define t1_min -200
 #define t1_max 200
 
+#define t1_offset 37
+
 
 // Bool_t file_exists(TString fname){
 //   
@@ -194,8 +196,8 @@ void compare_vol(void) {
   tg_ChX_t1_unpolar->GetZaxis()->SetTitle("t1 (ns)");
   tg_ChX_t1_unpolar->GetZaxis()->SetTitleOffset(1.4);
   
-#define interpol_phisteps 72+1 // 5 degree steps
-#define interpol_radsteps 100
+#define interpol_phisteps (16*72)+1 // 5 degree steps
+#define interpol_radsteps 1600
 #define interpol_max_rad  4000
 #define interpol_max_y 3000
 #define interpol_min_y -3000
@@ -397,11 +399,11 @@ void compare_vol(void) {
     get_toa_offset(CentA_t1, &intersect, &midpoint);
 	CentA_t1->DrawCopy("hist e");
 	CentA_t1->SaveAs("www.png");
-    t1 = midpoint;
+    t1 = midpoint+t1_offset;
     if(use_intersect) {
-      t1 = intersect;
+      t1 = intersect+t1_offset;
     }
-     t1_mean = CentA_t1->GetMean();
+     t1_mean = CentA_t1->GetMean()+t1_offset;
      counts = CentA_t1->GetEntries();
      ref_counts = RefChan_t1->GetEntries();
      t1_std  = CentA_t1->GetStdDev();
@@ -650,7 +652,7 @@ void compare_vol(void) {
       Double_t my_phi = t1_unpolar_interpol->GetXaxis()->GetBinCenter(phibin);
       Double_t my_r = t1_unpolar_interpol->GetYaxis()->GetBinCenter(rbin);
       
-      Double_t interpol_t1 = -30;
+      Double_t interpol_t1 = 0;
       
       Double_t my_y = my_r * TMath::Cos(my_phi);
       Double_t my_z = my_r * TMath::Sin(my_phi);
@@ -665,7 +667,7 @@ void compare_vol(void) {
     }
   }
   
-  draw_and_save(t1_unpolar_interpol,"t1_unpolar_interpol",outdir,"lego2");
+  draw_and_save(t1_unpolar_interpol,"t1_unpolar_interpol",outdir,"colz");
   
   
   
