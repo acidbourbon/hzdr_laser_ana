@@ -15,6 +15,11 @@ elif [ -e $scan_dir/thr_list_pt.txt ]; then
   export scan_thr="true"
   cp $scan_dir/thr_list_pt.txt thr_list.txt
   cp $scan_dir/thr_list_pt.txt intensity_list.txt
+elif [ -e $scan_dir/vlist.txt ]; then
+  echo "is a voltage scan"
+  export scan_v="true"
+  cp $scan_dir/vlist.txt vlist.txt
+  cp $scan_dir/vlist.txt intensity_list.txt
 else 
   cut -d " " -f 1 $scan_dir/point_list.txt > xlist.txt
   cut -d " " -f 2 $scan_dir/point_list.txt > ylist.txt

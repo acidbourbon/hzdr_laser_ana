@@ -1,0 +1,15 @@
+TDC=0353 chan=07 scan_x=true ./compare.sh ../elements_data/062_xscan_ASD8_thr18000/
+#ASD8 threshold scan
+TDC=0353 chan=07 scan_thr=true ./compare.sh ../elements_data/025_asd8_thresh_scan/
+#ASD8 thr_scan_tdc_data
+TDC=0353 chan=07 scan_thr=true ./compare.sh ../elements_data/028_thr_scan_ASD8_with_scope/
+#PASTTREC scope acq TDC data
+TDC=0351 chan=07 scan_thr=true ./compare.sh ../elements_data/027_param_scan_pt_edge_ho_scope_pkt15/gain4/
+#PASTTREC fav settings thresh scan/tomography
+TDC=0351 chan=07 scan_thr=true ./compare.sh ../elements_data/026_param_scan_pt_edge_ho_pkt15/gain_4/
+TDC=0351 chan=07 scale_x=3.636364 ./compare.sh ../elements_data/146_PT_g1_pkt10_thr10_charge_calib_33k/
+TDC=0351 chan=07 scale_x=3.636364 ./compare.sh ../elements_data/145_PT_fav_charge_calib_33k/
+TDC=0351 chan=07 ./compare.sh ../elements_data/143_PT_fav_charge_calibration/
+TDC=0351 chan=07 scale_x=2.333e-1 xlabel="charge (pC)" ./compare.sh ../elements_data/143_PT_fav_charge_calibration/
+TDC=0351 chan=07 scale_x=8.484e-1 xlabel="charge (pC)" ./compare.sh ../elements_data/145_PT_fav_charge_calib_33k/
+TDC=0351 chan=07 scan_x=true ./compare.sh ../elements_data/036_xscan_pasttrec_gain4_pkt15_thr10_140s/

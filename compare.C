@@ -275,6 +275,12 @@ void compare(void) {
   TString scan_x=from_env("scan_x","false");
   TString scan_z=from_env("scan_z","false");
   TString scan_thr=from_env("scan_thr","false");
+  TString scan_v=from_env("scan_v","false");
+  
+  TString xlabel=from_env("xlabel","");
+  
+  TString scale_x_str=from_env("scale_x","1");
+  Float_t scale_x = scale_x_str.Atof();
   
   TString graph_x_unit       = "mm";
   TString graph_x_observable = "y";
@@ -355,6 +361,12 @@ void compare(void) {
   tg_intensity->GetXaxis()->SetTitle("y-pos (mm)");
   tg_intensity->GetYaxis()->SetTitle("intensity (nJ)");
   
+  TGraphErrors *tg_ChX_walk = new TGraphErrors();
+  tg_ChX_walk->SetTitle("Ch"+chan+" walk");
+  tg_ChX_walk->SetName("tg_Ch"+chan+"_walk");
+  tg_ChX_walk->GetXaxis()->SetTitle("tot mean (ns)");
+  tg_ChX_walk->GetYaxis()->SetTitle("t1 mean (ns)");
+  
   if( scan_x == "true") {
     tg_ChX_t1->GetXaxis()->SetTitle("x-pos (mm)");
     tg_ChX_t1_std->GetXaxis()->SetTitle("x-pos (mm)");
@@ -391,6 +403,32 @@ void compare(void) {
     tg_ChX_efficiency->GetXaxis()->SetTitle("threshold (LSB)");
     graph_x_observable = "thr";
     graph_x_unit = "LSB";
+  }
+  if( scan_v == "true") {
+    tg_ChX_t1->GetXaxis()->SetTitle(               "voltage (V)");
+    tg_ChX_t1_std->GetXaxis()->SetTitle(           "voltage (V)");
+    tg_ChX_t1_means->GetXaxis()->SetTitle(         "voltage (V)");
+    tg_ChX_tot_means->GetXaxis()->SetTitle(        "voltage (V)");
+    tg_ChX_tot_untrig_means->GetXaxis()->SetTitle( "voltage (V)");
+    tg_ChX_counts->GetXaxis()->SetTitle(           "voltage (V)");
+    tg_ChX_t1_gauss->GetXaxis()->SetTitle(         "voltage (V)");
+    tg_intensity->GetXaxis()->SetTitle(            "voltage (V)");
+    tg_ChX_efficiency->GetXaxis()->SetTitle(       "voltage (V)");
+    graph_x_observable = "voltage";
+    graph_x_unit = "V";
+  }
+  if( xlabel != "") {
+    tg_ChX_t1->GetXaxis()->SetTitle(               xlabel);
+    tg_ChX_t1_std->GetXaxis()->SetTitle(           xlabel);
+    tg_ChX_t1_means->GetXaxis()->SetTitle(         xlabel);
+    tg_ChX_tot_means->GetXaxis()->SetTitle(        xlabel);
+    tg_ChX_tot_untrig_means->GetXaxis()->SetTitle( xlabel);
+    tg_ChX_counts->GetXaxis()->SetTitle(           xlabel);
+    tg_ChX_t1_gauss->GetXaxis()->SetTitle(         xlabel);
+    tg_intensity->GetXaxis()->SetTitle(            xlabel);
+    tg_ChX_efficiency->GetXaxis()->SetTitle(       xlabel);
+    graph_x_observable = xlabel;
+    graph_x_unit = "";
   }
   
   TH2F* pulse_tomography;
@@ -432,6 +470,7 @@ void compare(void) {
   std::vector<TString> zlist;
   std::vector<TString> intensitylist;
   std::vector<TString> thr_list; 
+  std::vector<TString> vlist; 
   
   c_t1_all->Divide(3,list.size()/3+1);
   
@@ -439,6 +478,8 @@ void compare(void) {
   
   if ( scan_thr == "true" ){
     thr_list = file_to_str_array("thr_list.txt");
+  } else if ( scan_v == "true" ){
+    vlist = file_to_str_array("vlist.txt");
   } else {
     xlist = file_to_str_array("xlist.txt");
     ylist = file_to_str_array("ylist.txt");
@@ -488,6 +529,7 @@ void compare(void) {
     }
     
     TH2F* CentA_potato = ((TH2F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_potato"));  
+    TH2F* CentA_potato_walkc = ((TH2F*) f->Get("Histograms/Sec_"+TDC+"/Sec_"+TDC+"_Ch"+chan+"_potato_walkc"));  
     
     //HistXCut(CentA_t1_walkc,-50,90);
     //cut_around_maximum(CentA_t1_walkc,10,10);
@@ -506,6 +548,9 @@ void compare(void) {
     if(use_intersect) {
       t1 = intersect;
     }
+    
+    cout << "t1: " << t1 << endl;
+    
     Double_t t1_mean = CentA_t1_walkc->GetMean();
     Double_t counts = CentA_t1_walkc->Integral();
     Double_t ref_counts = RefChan_t1->Integral();
@@ -525,6 +570,8 @@ void compare(void) {
     
   if ( scan_thr == "true" ){
     cout << "thresh: " << thr_list[i] << endl;
+  } else if ( scan_v == "true" ){
+    cout << "input voltage: " << vlist[i] << endl;
   } else {
     cout << "x pos: " << xlist[i] << endl;
     cout << "y pos: " << ylist[i] << endl;
@@ -537,6 +584,8 @@ void compare(void) {
     Double_t graph_x;
     if( scan_thr == "true") {
       graph_x = thr_list[i].Atoi();
+    } else if( scan_v == "true") {
+      graph_x = vlist[i].Atof();
     } else if( scan_x == "true") {
       graph_x = xlist[i].Atof() + x_shift;
     } else if( scan_z == "true") {
@@ -544,6 +593,8 @@ void compare(void) {
     } else {
       graph_x = ylist[i].Atof();
     }
+    
+    graph_x *= scale_x;
     
     TString graph_x_str;
     graph_x_str.Form("%06.2f",graph_x);
@@ -553,7 +604,7 @@ void compare(void) {
 //     cout << "intensity" << intensitylist[i] << endl;
 //     Double_t intensity = i;
     cout << "test" << endl;
-    if( true) { // select only points in the anode plane
+    if( CentA_t1_walkc->GetEntries() > 0 ) { // only do the fits if you have data recorded
        
         tg_ChX_t1->SetPoint(point_no,graph_x,t1);
         tg_ChX_t1_means->SetPoint(point_no,graph_x,t1_mean);
@@ -562,7 +613,9 @@ void compare(void) {
         tg_ChX_tot_means->SetPointError (point_no, 0, tot_std);
         tg_ChX_tot_untrig_means->SetPoint(point_no,graph_x,tot_untrig_mean);
         tg_ChX_tot_untrig_means->SetPointError (point_no, 0, tot_untrig_std);
-        
+	
+        tg_ChX_walk->SetPoint(point_no,CentA_tot->GetMean(),CentA_t1->GetMean()); 
+        tg_ChX_walk->SetPointError(point_no,CentA_tot->GetStdDev(),CentA_t1->GetStdDev()); 
         tg_ChX_counts->SetPoint(point_no,graph_x,counts);
         
         
@@ -572,20 +625,27 @@ void compare(void) {
         TH1F* t1_walkc_clone = (TH1F*) CentA_t1_walkc->Clone();
         TH1F* t2_clone = (TH1F*) CentA_t2->Clone();
         TH2F* potato_clone = (TH2F*) CentA_potato->Clone();
+        TH2F* potato_walkc_clone = (TH2F*) CentA_potato_walkc->Clone();
         TH1F* tot_clone = (TH1F*) CentA_tot->Clone();
         TH1F* tot_untrig_clone = (TH1F*) CentA_tot_untrig->Clone();
         TString new_hist_name;
-        new_hist_name.Form("%04.1f_t1_hist",graph_x);
+        new_hist_name.Form("%04.3f_t1_walkc_hist",graph_x);
         t1_walkc_clone->SetName(new_hist_name);
-        new_hist_name.Form("%04.1f_potato_hist",graph_x);
+        new_hist_name.Form("%04.3f_t1_hist",graph_x);
+        t1_clone->SetName(new_hist_name);
+        new_hist_name.Form("%04.3f_potato_hist",graph_x);
         potato_clone->SetName(new_hist_name);
-        new_hist_name.Form("%04.1f_tot_hist",graph_x);
+        new_hist_name.Form("%04.3f_potato_walkc_hist",graph_x);
+        potato_walkc_clone->SetName(new_hist_name);
+        new_hist_name.Form("%04.3f_tot_hist",graph_x);
         tot_clone->SetName(new_hist_name);
-        new_hist_name.Form("%04.1f_tot_untrig_hist",graph_x);
+        new_hist_name.Form("%04.3f_tot_untrig_hist",graph_x);
         tot_untrig_clone->SetName(new_hist_name);
         f_out->cd();
-//         t1_walkc_clone->Write();
+        t1_clone->Write();
+        t1_walkc_clone->Write();
         potato_clone->Write();
+        potato_walkc_clone->Write();
         tot_clone->Write();
         tot_untrig_clone->Write();
         
@@ -642,7 +702,7 @@ void compare(void) {
         t1_gauss_mu    = fit->GetParameter(1); 
         t1_gauss_sigma = fit->GetParameter(2); 
         
-        plotTopLegend(Form(graph_x_observable+" = %4.1f "+graph_x_unit, graph_x), 0.1,1.01);
+        plotTopLegend(Form(graph_x_observable+" = %4.3f "+graph_x_unit, graph_x), 0.1,1.01);
         
 //         counts=t1_walkc_clone->Integral(t1_walkc_clone->FindBin(fit_mean-10*fit_sigma),t1_walkc_clone->FindBin(fit_mean+10*fit_sigma));
         counts=t1_walkc_clone->Integral(max-peak_hood,max+peak_hood);
@@ -745,8 +805,8 @@ void compare(void) {
   tg_ChX_t1_means->SetMarkerColor(4);
   tg_ChX_t1_means->SetMarkerStyle(21);
 //   tg_ChX_t1_means->GetYaxis()->SetRangeUser(-10,20);
-  if(TDC == "1483") tg_ChX_t1_means->GetYaxis()->SetRangeUser(-20,-5);
-//   draw_and_save(tg_ChX_t1_means,"tg_Ch"+chan+"_t1_means",outdir,"AP");
+//   if(TDC == "1483") tg_ChX_t1_means->GetYaxis()->SetRangeUser(-20,-5);
+  draw_and_save(tg_ChX_t1_means,"tg_Ch"+chan+"_t1_means",outdir,"AP");
   
   tg_ChX_t1_gauss->SetLineColor(2);
   tg_ChX_t1_gauss->SetLineWidth(4);
@@ -791,7 +851,7 @@ void compare(void) {
   tg_ChX_tot_means->SetMarkerStyle(21);
   tg_ChX_tot_means->GetYaxis()->SetRangeUser(0,600);
   if(TDC == "1483") tg_ChX_tot_means->GetYaxis()->SetRangeUser(0,200);
-//   draw_and_save(tg_ChX_tot_means,"tg_Ch"+chan+"_tot_means",outdir,"AP");
+  draw_and_save(tg_ChX_tot_means,"tg_Ch"+chan+"_tot_means",outdir,"AP");
   c_results_all->cd(++i);
   tg_ChX_tot_means->Draw("AP");
   
@@ -818,6 +878,8 @@ void compare(void) {
 //   draw_and_save(tg_intensity,"tg_intensity",outdir,"AP");
 //   tg_intensity->GetYaxis()->SetRangeUser(0.0,30.0);
   
+//   tg_ChX_walk->Draw("APL");
+  draw_and_save(tg_ChX_walk,"tg_Ch"+chan+"_walk",outdir,"APL");
   
   
   
@@ -885,6 +947,7 @@ void compare(void) {
   f_out->cd();
   tg_ChX_t1->Write();
   tg_ChX_t1_means->Write();
+  tg_ChX_walk->Write();
   tg_ChX_t1_std->Write();
   tg_ChX_t1_gauss->Write();
   tg_ChX_counts->Write();
