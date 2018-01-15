@@ -599,21 +599,21 @@ void compare_vol(void) {
   tg_ChX_t1_unpolar->GetZaxis()->SetTitleOffset(1.4);
   
   tg_ChX_t1_means->SetLineColor(2);
-  tg_ChX_t1_means->SetLineWidth(4);
-  tg_ChX_t1_means->SetMarkerColor(4);
-  tg_ChX_t1_means->SetMarkerStyle(21);
+  tg_ChX_t1_means->SetLineWidth(1);
+  tg_ChX_t1_means->SetMarkerColor(kBlack);
+  tg_ChX_t1_means->SetMarkerStyle(6);
   draw_and_save(tg_ChX_t1_means,"tg_Ch"+chan+"_t1_means",outdir,"tri1 pcol");
   
   tg_ChX_tot_means->SetLineColor(2);
-  tg_ChX_tot_means->SetLineWidth(4);
-  tg_ChX_tot_means->SetMarkerColor(4);
-  tg_ChX_tot_means->SetMarkerStyle(21);
+  tg_ChX_tot_means->SetLineWidth(1);
+  tg_ChX_tot_means->SetMarkerColor(kBlack);
+  tg_ChX_tot_means->SetMarkerStyle(6);
   draw_and_save(tg_ChX_tot_means,"tg_Ch"+chan+"_tot_means",outdir,"tri1 pcol");
   
   tg_ChX_t1_std->SetLineColor(2);
-  tg_ChX_t1_std->SetLineWidth(4);
-  tg_ChX_t1_std->SetMarkerColor(4);
-  tg_ChX_t1_std->SetMarkerStyle(21);
+  tg_ChX_t1_std->SetLineWidth(1);
+  tg_ChX_t1_std->SetMarkerColor(kBlack);
+  tg_ChX_t1_std->SetMarkerStyle(6);
   draw_and_save(tg_ChX_t1_std,"tg_Ch"+chan+"_t1_std",outdir,"tri1 pcol");
   
   
