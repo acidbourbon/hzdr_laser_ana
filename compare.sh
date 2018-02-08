@@ -1,6 +1,8 @@
 #!/bin/bash
 
 scan_dir=$1
+quit=$2
+
 export outdir=$(echo $scan_dir | sed 's/data/ana/')
 mkdir -p $outdir
 

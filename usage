@@ -13,3 +13,22 @@ TDC=0351 chan=07 ./compare.sh ../elements_data/143_PT_fav_charge_calibration/
 TDC=0351 chan=07 scale_x=2.333e-1 xlabel="charge (pC)" ./compare.sh ../elements_data/143_PT_fav_charge_calibration/
 TDC=0351 chan=07 scale_x=8.484e-1 xlabel="charge (pC)" ./compare.sh ../elements_data/145_PT_fav_charge_calib_33k/
 TDC=0351 chan=07 scan_x=true ./compare.sh ../elements_data/036_xscan_pasttrec_gain4_pkt15_thr10_140s/
+#veery strange
+TDC=0351 chan=04 scale_x=0.194417 xlabel="charge (pC)" ./compare.sh ../elements_data/147_PT_fav_charge_calib_144k_4R/
+TDC=0351 chan=04 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/148_PT_fav_charge_calib_32.8k_4R/
+TDC=0351 chan=05 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/150_PT_fav_charge_calib_32.8k_4R_ch05/
+TDC=0351 chan=07 scale_x=0.212091 xlabel="charge (pC)" ./compare.sh ../elements_data/153_PT_fav_charge_calib_4x33k/
+TDC=0351 chan=07 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/154_PT_fav_charge_calib_4x8.2k/
+TDC=0351 chan=04 scale_x=0.212091 xlabel="charge (pC)" ./compare.sh ../elements_data/155_PT_fav_charge_calib_4x33k_ch04/
+
+TDC=0351 chan=00 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/157_PT_fav_charge_calib_4x8.2k_ch00/ -q
+TDC=0351 chan=01 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/158_PT_fav_charge_calib_4x8.2k_ch01/ -q
+TDC=0351 chan=02 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/159_PT_fav_charge_calib_4x8.2k_ch02/ -q
+TDC=0351 chan=03 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/160_PT_fav_charge_calib_4x8.2k_ch03/ -q
+TDC=0351 chan=04 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/161_PT_fav_charge_calib_4x8.2k_ch04/ -q
+TDC=0351 chan=05 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/162_PT_fav_charge_calib_4x8.2k_ch05/ -q
+TDC=0351 chan=06 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/163_PT_fav_charge_calib_4x8.2k_ch06/ -q
+TDC=0351 chan=07 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/164_PT_fav_charge_calib_4x8.2k_ch07/ -q
+TDC=0353 chan=07 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/240_ASD8_25000_charge_calib_4x8.2k_ch07/
+TDC=0353 chan=07 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/242_ASD8_18000_charge_calib_4x8.2k_ch07/
+TDC=0353 chan=06 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/241_ASD8_25000_charge_calib_4x8.2k_ch06/
