@@ -32,3 +32,16 @@ TDC=0351 chan=07 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_
 TDC=0353 chan=07 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/240_ASD8_25000_charge_calib_4x8.2k_ch07/
 TDC=0353 chan=07 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/242_ASD8_18000_charge_calib_4x8.2k_ch07/
 TDC=0353 chan=06 scale_x=0.853537 xlabel="charge (pC)" ./compare.sh ../elements_data/241_ASD8_25000_charge_calib_4x8.2k_ch06/
+TDC=0353 chan=07 scan_x=true ./compare.sh ../elements_data/035_xscan_asd8_highstat/
+
+
+if you see this: 
+Error in <HandleInterpreterException>: Trying to dereference null pointer or trying to call routine taking non-null arguments.
+Execution of your code was aborted.
+/home/micha/daten/uni/PhD/2017-10-27_16:36:37_COSY_Beamtime/asd8_tdc/ana/compare.C:154:19: warning: null passed to a callee that requires a non-null argument [-Wnonnull]
+  TH1* cum_toa0 = toa0->GetCumulative();
+                  ^~~~
+unpack again, you do not have walk corrected histograms yet!
+
+
+TDC=0351 chan=07 scan_x=true ./compare.sh ../elements_data/036_xscan_pasttrec_gain4_pkt15_thr10_140s/

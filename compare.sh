@@ -34,5 +34,6 @@ find $scan_dir -name "*.hld.root" | sort > root_files.txt
 # echo $(cat $i) | sed 's/,/./' >> intensity_list.txt
 # done
 cp $scan_dir/triggers.txt ./intensity_list.txt
+cp compare.C $outdir/compare.C_bak
 
 root -l 'compare.C()' $2 ## can add -q via #2
